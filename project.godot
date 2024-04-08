@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="StateMachine Nodes"
-config/description="A set of Finite State Machine nodes used to manage and process logic."
-run/main_scene="res://example/demo.tscn"
+config/description="A set of Finite State Machine nodes for organizing and processing logic."
+run/main_scene="res://example/scene.tscn"
 config/features=PackedStringArray("4.2")
 config/icon="res://icon.svg"
 
