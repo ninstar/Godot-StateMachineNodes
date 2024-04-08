@@ -1,0 +1,354 @@
+[gd_scene load_steps=26 format=3 uid="uid://cch82w633sb1r"]
+
+[ext_resource type="Script" path="res://example/player.gd" id="1_3h142"]
+[ext_resource type="Texture2D" uid="uid://bb8hayf3q488j" path="res://example/sprite.png" id="2_kqjiq"]
+[ext_resource type="Script" path="res://addons/state_machine_nodes/state_machine.gd" id="3_u32ge"]
+[ext_resource type="Script" path="res://example/states/idle.gd" id="4_m7thh"]
+[ext_resource type="Script" path="res://example/states/walk.gd" id="5_rrbdy"]
+[ext_resource type="Script" path="res://example/states/jump.gd" id="6_ysv5g"]
+[ext_resource type="Script" path="res://example/states/fall.gd" id="7_v58jh"]
+[ext_resource type="Script" path="res://example/states/crouch.gd" id="8_ive84"]
+[ext_resource type="Script" path="res://example/history.gd" id="9_4bj88"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_omlgw"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 12
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="Gradient" id="Gradient_avl2a"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_7o3wo"]
+gradient = SubResource("Gradient_avl2a")
+height = 720
+fill_from = Vector2(0, 0.230769)
+fill_to = Vector2(0, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lm0c5"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(112, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tsy2j"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(80, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x40pj"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(96, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yl38a"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(0, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qs6gu"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(64, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7s3d2"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(16, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2v755"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(32, 0, 16, 20)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_di2l4"]
+atlas = ExtResource("2_kqjiq")
+region = Rect2(48, 0, 16, 20)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xjypl"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lm0c5")
+}],
+"loop": true,
+"name": &"crouch",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tsy2j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x40pj")
+}],
+"loop": true,
+"name": &"fall",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yl38a")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qs6gu")
+}],
+"loop": true,
+"name": &"jump",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7s3d2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2v755")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_di2l4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2v755")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 6.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sqv6l"]
+radius = 16.0
+height = 48.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqjar"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.501961)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a4okr"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.501961)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wldyn"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+draw_center = false
+border_width_left = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0, 0, 0, 0.501961)
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="Demo" type="Node"]
+
+[node name="Help" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Walk" type="VBoxContainer" parent="Help"]
+layout_mode = 0
+offset_left = 288.0
+offset_top = 114.0
+offset_right = 388.0
+offset_bottom = 202.0
+metadata/_edit_group_ = true
+
+[node name="Keys" type="HBoxContainer" parent="Help/Walk"]
+layout_mode = 2
+
+[node name="L" type="Label" parent="Help/Walk/Keys"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_omlgw")
+text = "◂"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="R" type="Label" parent="Help/Walk/Keys"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_omlgw")
+text = "▸"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Label" type="Label" parent="Help/Walk"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Walk"
+horizontal_alignment = 1
+
+[node name="Crouch" type="VBoxContainer" parent="Help"]
+layout_mode = 0
+offset_left = 85.0
+offset_top = 320.0
+offset_right = 167.0
+offset_bottom = 408.0
+metadata/_edit_group_ = true
+
+[node name="Key" type="Label" parent="Help/Crouch"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_omlgw")
+text = "▾"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Label" type="Label" parent="Help/Crouch"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Crouch"
+horizontal_alignment = 1
+
+[node name="Jump" type="VBoxContainer" parent="Help"]
+layout_mode = 1
+offset_left = 704.0
+offset_top = 288.0
+offset_right = 896.0
+offset_bottom = 376.0
+metadata/_edit_group_ = true
+
+[node name="Key" type="Label" parent="Help/Jump"]
+custom_minimum_size = Vector2(192, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_omlgw")
+text = "SPACE"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Label" type="Label" parent="Help/Jump"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Jump"
+horizontal_alignment = 1
+
+[node name="Ground" type="StaticBody2D" parent="."]
+
+[node name="Polygon" type="Polygon2D" parent="Ground"]
+texture_filter = 1
+color = Color(0.258824, 0.482353, 0.839216, 0.678431)
+texture = SubResource("GradientTexture2D_7o3wo")
+invert_enabled = true
+invert_border = 0.1
+polygon = PackedVector2Array(-32, 704, -32, -32, 32, -32, 32, 256, 256, 256, 384, 288, 384, 320, 256, 288, 32, 288, 32, 512, 384, 512, 544, 608, 704, 608, 704, 512, 832, 512, 928, 416, 1024, 416, 1024, 288, 1120, 288, 1120, -32, 1184, -32, 1184, 704)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Ground"]
+visible = false
+polygon = PackedVector2Array(-32, 704, -32, -32, 32, -32, 32, 256, 256, 256, 384, 288, 384, 320, 256, 288, 32, 288, 32, 512, 384, 512, 544, 608, 704, 608, 704, 512, 832, 512, 928, 416, 1024, 416, 1024, 288, 1120, 288, 1120, -32, 1184, -32, 1184, 704)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(128, 232)
+floor_snap_length = 8.0
+script = ExtResource("1_3h142")
+metadata/_edit_group_ = true
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Player"]
+texture_filter = 1
+position = Vector2(0, -14)
+scale = Vector2(4, 4)
+sprite_frames = SubResource("SpriteFrames_xjypl")
+animation = &"idle"
+frame_progress = 0.121329
+
+[node name="Collision" type="CollisionShape2D" parent="Player"]
+shape = SubResource("CapsuleShape2D_sqv6l")
+
+[node name="StateMachine" type="Node" parent="Player" node_paths=PackedStringArray("initial_state", "target_node")]
+script = ExtResource("3_u32ge")
+history_limit = 3
+initial_state = NodePath("Idle")
+target_node = NodePath("..")
+
+[node name="Idle" type="Node" parent="Player/StateMachine"]
+script = ExtResource("4_m7thh")
+
+[node name="Walk" type="Node" parent="Player/StateMachine"]
+script = ExtResource("5_rrbdy")
+
+[node name="Jump" type="Node" parent="Player/StateMachine"]
+script = ExtResource("6_ysv5g")
+
+[node name="Fall" type="Node" parent="Player/StateMachine"]
+script = ExtResource("7_v58jh")
+
+[node name="Crouch" type="Node" parent="Player/StateMachine"]
+script = ExtResource("8_ive84")
+
+[node name="State" type="Label" parent="Player"]
+custom_minimum_size = Vector2(96, 0)
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -48.0
+offset_top = -88.0
+offset_right = 48.0
+offset_bottom = -57.0
+grow_horizontal = 2
+tooltip_text = "Active state"
+mouse_filter = 1
+theme_override_styles/normal = SubResource("StyleBoxFlat_hqjar")
+text = "State"
+horizontal_alignment = 1
+
+[node name="History" type="VBoxContainer" parent="." node_paths=PackedStringArray("state_machine")]
+custom_minimum_size = Vector2(192, 164)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -226.0
+offset_top = -201.0
+offset_right = -31.0
+offset_bottom = -37.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 0
+script = ExtResource("9_4bj88")
+state_machine = NodePath("../Player/StateMachine")
+metadata/_edit_group_ = true
+
+[node name="Count" type="Label" parent="History"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_a4okr")
+text = "History -/-"
+horizontal_alignment = 3
+
+[node name="Panel" type="PanelContainer" parent="History"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_wldyn")
+
+[node name="List" type="TextEdit" parent="History/Panel"]
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+editable = false
+
+[connection signal="state_changed" from="Player/StateMachine" to="Player" method="_on_state_machine_state_changed"]
