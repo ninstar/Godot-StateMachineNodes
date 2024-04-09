@@ -1,14 +1,14 @@
 [gd_scene load_steps=26 format=3 uid="uid://cch82w633sb1r"]
 
-[ext_resource type="Script" path="res://example/player.gd" id="1_3h142"]
-[ext_resource type="Texture2D" uid="uid://bb8hayf3q488j" path="res://example/sprite.png" id="2_kqjiq"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/player.gd" id="1_3h142"]
+[ext_resource type="Texture2D" uid="uid://bb8hayf3q488j" path="res://examples/state_machine_nodes/sprite.png" id="2_kqjiq"]
 [ext_resource type="Script" path="res://addons/state_machine_nodes/state_machine.gd" id="3_u32ge"]
-[ext_resource type="Script" path="res://example/states/idle.gd" id="4_m7thh"]
-[ext_resource type="Script" path="res://example/states/walk.gd" id="5_rrbdy"]
-[ext_resource type="Script" path="res://example/states/jump.gd" id="6_ysv5g"]
-[ext_resource type="Script" path="res://example/states/fall.gd" id="7_v58jh"]
-[ext_resource type="Script" path="res://example/states/crouch.gd" id="8_ive84"]
-[ext_resource type="Script" path="res://example/history.gd" id="9_4bj88"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/states/idle.gd" id="4_m7thh"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/states/walk.gd" id="5_rrbdy"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/states/jump.gd" id="6_ysv5g"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/states/fall.gd" id="7_v58jh"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/states/crouch.gd" id="8_ive84"]
+[ext_resource type="Script" path="res://examples/state_machine_nodes/history.gd" id="9_4bj88"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_omlgw"]
 bg_color = Color(0, 0, 0, 0)

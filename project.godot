@@ -12,9 +12,9 @@ config_version=5
 
 config/name="StateMachine Nodes"
 config/description="A set of Finite State Machine nodes for organizing and processing logic."
-run/main_scene="res://example/scene.tscn"
+run/main_scene="res://examples/state_machine_nodes/scene.tscn"
 config/features=PackedStringArray("4.2")
-config/icon="res://icon.svg"
+config/icon="res://icon.png"
 
 [editor_plugins]
 

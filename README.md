@@ -2,7 +2,7 @@
 
 A set of Finite State Machine nodes for organizing and processing logic.
 
-<img src="./example/screenshot.png" alt="Example" width="100%">
+<img src="./examples/state_machine_nodes/screenshot.png" alt="Example" width="100%">
 
 ## Nodes
 - <img src="./addons/state_machine_nodes/state_machine.svg" alt="Icon" width="14px"> **StateMachine** - A node used to manage and process logic on a StateNode.  
