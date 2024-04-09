@@ -1,4 +1,4 @@
-# <img src="./icon.svg" width="24px"> StateMachine Nodes
+# <img src="./icon.png" width="24px"> StateMachine Nodes
 
 A set of Finite State Machine nodes for organizing and processing logic.
 
