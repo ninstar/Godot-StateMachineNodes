@@ -1,23 +1,3 @@
-# Copyright (c) 2024 NinStar
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the “Software”),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 @icon("state_machine.svg")
 
 class_name StateMachine extends Node
@@ -37,13 +17,15 @@ class_name StateMachine extends Node
 signal state_changed(previous_state: String, new_state: String)
 
 
-## If [code]true[/code], automates the processing of StateNodes.[br][br]
+## If [code]true[/code], automates the processing of StateNodes by calling
+## [method process_state] and [method process_state_physics] every frame.
+## [br][br]
 ## Setting this property to [code]false[/code] can be useful if you want
-## to explicty set the order in which each method of a [StateNode] is processed.
-@export var automated: bool = true: get = is_automated, set = set_automated
+## to manually determine when these methods should be called.
+@export var auto_process: bool = true: get = get_auto_process, set = set_auto_process
 
 ## The maximum amount of state names the StateMachine will save in its history.
-@export_range(0, 255, 1, "or_greater", "suffix: state(s)") var history_limit: int = 1: get = get_history_limit, set = set_history_limit
+@export_range(0, 1024, 1, "or_greater", "suffix: state(s)") var history_limit: int = 1: get = get_history_limit, set = set_history_limit
 
 ## The [StateNode] the StateMachine will enter once it is ready.
 @export var initial_state: StateNode: get = get_initial_state, set = set_initial_state
@@ -110,45 +92,26 @@ func get_state_list() -> Array[String]:
 	return _state_table.keys()
 
 
-## Calls [method StateNode.process_frame] on the current [StateNode].[br][br]
-## [b]Note:[/b] This method is called automatically if [member automated]
-## is set to [code]true[/code].
-func process_frame(delta: float) -> void:
+## Calls [method StateNode._state_process] on the current [StateNode].
+## [br][br]
+## [b]Note:[/b] This method is called automatically if [member auto_process]
+## is [code]true[/code].
+func process_state(delta: float) -> void:
 	if is_instance_valid(_state_node):
-		var new_state: String = _state_node.process_frame(delta)
+		var new_state: String = _state_node._process_state(delta)
 		if not new_state.is_empty():
 			set_state(new_state)
 
 
-## Calls [method StateNode.process_physics] on the current [StateNode].[br][br]
-## [b]Note:[/b] This method is called automatically if [member automated]
-## is set to [code]true[/code].
-func process_physics(delta: float) -> void:
+## Calls [method StateNode._state_physics_process] on the current [StateNode].
+## [br][br]
+## [b]Note:[/b] This method is called automatically if [member auto_process]
+## is [code]true[/code].
+func physics_process_state(delta: float) -> void:
 	if is_instance_valid(_state_node):
-		var new_state: String = _state_node.process_physics(delta)
+		var new_state: String = _state_node._physics_process_state(delta)
 		if not new_state.is_empty():
 			set_state(new_state)
-
-
-## Calls [method StateNode.process_input] on the current [StateNode].[br][br]
-## [b]Note:[/b] This method is called automatically if [member automated]
-## is set to [code]true[/code].
-func process_input(event: InputEvent) -> void:
-	if is_instance_valid(_state_node):
-		var new_state: String = _state_node.process_input(event)
-		if not new_state.is_empty():
-			set_state(new_state)
-
-
-## Calls [method StateNode.process_unhandled_input] on the current
-## [StateNode].[br][br]
-## [b]Note:[/b] This method is called automatically if [member automated]
-## is set to [code]true[/code].
-func process_unhandled_input(event: InputEvent) -> void:
-	if is_instance_valid(_state_node):
-		var new_state: String = _state_node.process_unhandled_input(event)
-		if not new_state.is_empty():
-			change_state(new_state)
 
 
 #region Signals
@@ -157,57 +120,45 @@ func __on_child_entered_tree(node: Node) -> void:
 	if node.get_parent() == self and node is StateNode:
 		_state_table[node.name] = node
 		node._state_machine = self
-	
 
 func __on_child_exiting_tree(node: Node) -> void:
 	if node.get_parent() == self and node is StateNode:
 		if _state_table.has(node.name):
 			_state_table.erase(node.name)
 
-
 #endregion
 #region Virtual methods
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_ENTER_TREE:
-		child_entered_tree.connect(__on_child_entered_tree)
-		child_exiting_tree.connect(__on_child_exiting_tree)
-	elif what == NOTIFICATION_READY:
-		for key: String in _state_table.keys():
-			var node := _state_table[key] as StateNode
-			node.state_machine_ready()
-		if is_instance_valid(initial_state):
-			if initial_state.get_parent() == self:
-				_state_node = initial_state
-				_state_node.entered("")
-
-
-func _process(delta: float) -> void:
-	if automated:
-		process_frame(delta)
-
-
-func _physics_process(delta: float) -> void:
-	if automated:
-		process_physics(delta)
-
-
-func _input(event: InputEvent) -> void:
-	if automated:
-		process_input(event)
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if automated:
-		process_unhandled_input(event)
+	match what:
+		NOTIFICATION_ENTER_TREE:
+			child_entered_tree.connect(__on_child_entered_tree)
+			child_exiting_tree.connect(__on_child_exiting_tree)
+		NOTIFICATION_READY:
+			set_process(true)
+			set_physics_process(true)
+			for key: String in _state_table.keys():
+				var node := _state_table[key] as StateNode
+				node._state_machine_ready()
+			if is_instance_valid(initial_state):
+				if initial_state.get_parent() == self:
+					_state_node = initial_state
+					_state_node._enter_state("")
+					_state_node.state_entered.emit()
+		NOTIFICATION_PROCESS:
+			if auto_process:
+				process_state(get_process_delta_time())
+		NOTIFICATION_PHYSICS_PROCESS:
+			if auto_process:
+				physics_process_state(get_physics_process_delta_time())
 
 #endregion
 #region Getters & Setters
 
 # Getters
 
-func is_automated() -> bool:
-	return automated
+func get_auto_process() -> bool:
+	return auto_process
 
 
 func get_history_limit() -> int:
@@ -231,12 +182,8 @@ func get_history() -> Array[String]:
 
 # Setters
 
-func set_automated(value: bool) -> void:
-	automated = value
-	set_process(automated)
-	set_physics_process(automated)
-	set_process_input(automated)
-	set_process_unhandled_input(automated)
+func set_auto_process(value: bool) -> void:
+	auto_process = value
 
 
 func set_history_limit(value: int) -> void:
@@ -275,7 +222,8 @@ func set_state(value: String) -> void:
 	# Exit current state
 	if is_instance_valid(previous_node):
 		if not _silent_exit:
-			previous_node.exited(next_node.name)
+			previous_node._exit_state(next_node.name)
+			previous_node.state_exited.emit()
 		
 		# Add to history
 		if history_limit == 1 and history.size() > 0:
@@ -287,7 +235,8 @@ func set_state(value: String) -> void:
 	
 	# Enter new state
 	if not _silent_enter:
-		next_node.entered(previous_node.name)
+		next_node._enter_state(previous_node.name)
+		previous_node.state_entered.emit()
 	
 	_state_node = next_node
 	

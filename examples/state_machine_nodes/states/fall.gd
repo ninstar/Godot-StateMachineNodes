@@ -1,11 +1,11 @@
 extends "jump.gd"
 
 
-func entered(_previous_state: String) -> void:
+func _enter_state(_previous_state: String) -> void:
 	sprite.play(&"fall")
 
 
-func process_physics(delta: float) -> String:
+func _physics_process_state(delta: float) -> String:
 	super(delta)
 	
 	if player.is_on_floor():

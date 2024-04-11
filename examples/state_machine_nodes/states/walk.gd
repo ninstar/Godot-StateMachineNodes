@@ -1,11 +1,11 @@
 extends "common_state.gd"
 
 
-func entered(_previous_state: String) -> void:
+func _enter_state(_previous_state: String) -> void:
 	sprite.play(&"walk")
 
 
-func process_physics(_delta: float) -> String:
+func _physics_process_state(_delta: float) -> String:
 	if player.is_on_floor():
 		var direction: float = Input.get_axis(&"ui_left", &"ui_right")
 		if direction != 0.0:

@@ -1,23 +1,3 @@
-# Copyright (c) 2024 NinStar
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the “Software”),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 @icon("state_node.svg")
 
 class_name StateNode extends Node
@@ -31,30 +11,47 @@ class_name StateNode extends Node
 ## Any StateNodes that are direct children of a StateMachine will be
 ## automatically assigned to it once it enters the [SceneTree].
 ## Each StateNode requires its own unique [code]name[/code].
+## [br][br]
+## The following methods can be overriden to add and extend logic:
+## [method _process_state], [method _physics_process_state],
+## [method _enter_state], [method _exit_state],
+## [method _state_machine_ready].
 
 
 var _state_machine: StateMachine
 
 
-## Called by a [StateMachine] once it is ready.
-func state_machine_ready() -> void:
+## Emitted when the state is entered.
+signal state_entered()
+
+## Emitted when the state is exited.
+signal state_exited()
+
+
+## [b]<OVERRIDABLE>[/b][br][br]
+## Called by a [StateMachine] once it is ready
+@warning_ignore("unused_parameter")
+func _state_machine_ready() -> void:
 	pass
 
 
+## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] when the state is entered.
 ## [param previous_state] is the name of the previous [b]StateNode[/b].
 @warning_ignore("unused_parameter")
-func entered(previous_state: String) -> void:
+func _enter_state(previous_state: String) -> void:
 	pass
 
 
+## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] when the state is exited.
 ## [param next_state] is the name of the next [b]StateNode[/b].
 @warning_ignore("unused_parameter")
-func exited(next_state: String) -> void:
+func _exit_state(next_state: String) -> void:
 	pass
 
 
+## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] each process frame (idle) with the
 ## time since the last process frame as argument ([param delta], in seconds).
 ## [br][br]
@@ -62,7 +59,7 @@ func exited(next_state: String) -> void:
 ## [b]StateNode[/b] to transition to or an empty string ([code]""[/code])
 ## to stay in the current state for the next process frame. Example:
 ## [codeblock]
-## func process_frame(delta):
+## func _process_state(delta):
 ##     # Go to "Jump" state if Up is pressed and skip the rest of this code.
 ##     if Input.is_action_pressed("ui_up"):
 ##         return "Jump"
@@ -71,32 +68,16 @@ func exited(next_state: String) -> void:
 ##     return ""
 ## [/codeblock]
 @warning_ignore("unused_parameter")
-func process_frame(delta: float) -> String:
+func _process_state(delta: float) -> String:
 	return ""
 
 
+## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] each physics frame with the time since
 ## the last physics frame as argument ([param delta], in seconds).
-## (See [method process_frame]).
+## (See [method _process_state]).
 @warning_ignore("unused_parameter")
-func process_physics(delta: float) -> String:
-	return ""
-
-
-## Called by a [StateMachine] when there is an input event.
-## Equivalent to [method Node._input].
-## (See [method process_frame]).
-@warning_ignore("unused_parameter")
-func process_input(event: InputEvent) -> String:
-	return ""
-
-
-## Called by a [StateMachine] when an [InputEvent] hasn't been consumed by
-## [method Node._input] or any GUI [Control] item.
-## Equivalent to [method Node._unhandled_input].
-## (See [method process_frame]).
-@warning_ignore("unused_parameter")
-func process_unhandled_input(event: InputEvent) -> String:
+func _physics_process_state(delta: float) -> String:
 	return ""
 
 

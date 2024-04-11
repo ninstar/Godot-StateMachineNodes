@@ -14,8 +14,8 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += gravity * 2.0 * delta
 	
-	# Uncomment the line below if you've set the 'StateMachine.automated' to 'false'!
-	#state_machine.process_physics(delta)
+	# Uncomment the line below if you've set the 'StateMachine.auto_process' to 'false'!
+	# state_machine.physics_process_state(delta)
 	
 	move_and_slide()
 
