@@ -18,7 +18,7 @@ signal state_changed(previous_state: String, new_state: String)
 
 
 ## If [code]true[/code], automates the processing of StateNodes by calling
-## [method process_state] and [method process_state_physics] every frame.
+## [method process_state] and [method physics_process_state] every frame.
 ## [br][br]
 ## Setting this property to [code]false[/code] can be useful if you want
 ## to manually determine when these methods should be called.
@@ -36,10 +36,9 @@ signal state_changed(previous_state: String, new_state: String)
 
 
 ## The [code]name[/code] of the current [StateNode] of the StateMachine.
-## Changing this value directly will trigger a state transition
-## ([method StateNode.enter]/[method StateNode.exit]) if a valid StateNode of
-## the same name is assigned to this StateMachine, otherwise the value stay
-## the same and an error is logged.
+## Changing this value directly will trigger a state transition if a valid
+## StateNode of the same name is assigned to this StateMachine, otherwise
+## the value stay the same and an error is logged.
 ## [br][br]
 ## For more control over state transitions, check [method change_state].
 var state: String = "": set = set_state, get = get_state
@@ -58,12 +57,22 @@ var _silent_signal: bool = false
 
 
 ## Changes to a different [StateNode] by [code]name[/code]
-## ([param new_state]).[br][br]
-## This method will first call [method StateNode.exit] on the current StateNode
-## (if [param trans_exit] is [code]true[/code]), call
-## [method StateNode.enter] on the new one (if [param trans_enter]
-## is [code]true[/code]) and then emit [signal state_changed] (if 
-## [param trans_signal] is [code]true[/code]).
+## ([param new_state])[br][br]
+## The order in which a state transition occurs is as follows:[br]
+## [br][b]1.[/b] On the current StateNode, [method StateNode._exit_state]
+## is called and [signal StateNode.state_exited] is emitted.
+## (if [param trans_exit] is [code]true[/code].)
+## [br][b]2.[/b] The reference to the curent StateNode
+## is changed to the new one. ([param new_state])
+## [br][b]3.[/b] On the new StateNode, [method StateNode._enter_state]
+## is called and [signal StateNode.state_entered] is emitted.
+## (if [param trans_enter] is [code]true[/code].)
+## [br][b]4.[/b] [signal state_changed] is emitted.
+## (if [param trans_signal] is [code]true[/code].)
+## [br][br]
+## A state transition will only occur if [param new_state] points to
+## a valid StateNode, otherwise the state will stay the same and
+## an error will be logged.
 func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
 	_silent_exit = not trans_exit
 	_silent_enter = not trans_enter
@@ -92,7 +101,7 @@ func get_state_list() -> Array[String]:
 	return _state_table.keys()
 
 
-## Calls [method StateNode._state_process] on the current [StateNode].
+## Calls [method StateNode._process_state] on the current [StateNode].
 ## [br][br]
 ## [b]Note:[/b] This method is called automatically if [member auto_process]
 ## is [code]true[/code].
@@ -103,7 +112,7 @@ func process_state(delta: float) -> void:
 			set_state(new_state)
 
 
-## Calls [method StateNode._state_physics_process] on the current [StateNode].
+## Calls [method StateNode._physics_process_state] on the current [StateNode].
 ## [br][br]
 ## [b]Note:[/b] This method is called automatically if [member auto_process]
 ## is [code]true[/code].

@@ -53,10 +53,10 @@ func _exit_state(next_state: String) -> void:
 
 ## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] each process frame (idle) with the
-## time since the last process frame as argument ([param delta], in seconds).
+## time since the last process frame as argument. ([param delta], in seconds.)
 ## [br][br]
 ## Use [param return] to specify the [code]name[/code] of the
-## [b]StateNode[/b] to transition to or an empty string ([code]""[/code])
+## [b]StateNode[/b] to transition to, or an empty string ([code]""[/code])
 ## to stay in the current state for the next process frame. Example:
 ## [codeblock]
 ## func _process_state(delta):
@@ -74,8 +74,8 @@ func _process_state(delta: float) -> String:
 
 ## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] each physics frame with the time since
-## the last physics frame as argument ([param delta], in seconds).
-## (See [method _process_state]).
+## the last physics frame as argument. ([param delta], in seconds.)
+## See [method _process_state].
 @warning_ignore("unused_parameter")
 func _physics_process_state(delta: float) -> String:
 	return ""
