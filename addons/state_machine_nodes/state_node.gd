@@ -5,11 +5,11 @@ class_name StateNode extends Node
 
 ## A node that functions as a state for a [StateMachine].
 ##
-## StateNodes can be used to encapsulate and organize complex logic,
-## they are managed and ran by StateMachines.
+## StateNodes can be used to encapsulate and organize logic that is
+## processed by a parent StateMachine when needed.
 ## [br][br]
 ## Any StateNodes that are direct children of a StateMachine will be
-## automatically assigned to it once it enters the [SceneTree].
+## automatically assigned to it once both nodes enters the [SceneTree].
 ## Each StateNode requires its own unique [code]name[/code].
 ## [br][br]
 ## The following methods can be overriden to add and extend logic:

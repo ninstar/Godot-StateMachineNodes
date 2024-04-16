@@ -10,7 +10,7 @@ func _enter_state(_previous_state: String) -> void:
 
 
 func _physics_process_state(_delta: float) -> String:
-	var direction: float = Input.get_axis(&"ui_left", &"ui_right")
+	var direction: float = Input.get_axis(&"walk_left", &"walk_right")
 	if direction != 0.0:
 		sprite.flip_h = direction < 0.0
 		player.velocity.x = move_toward(player.velocity.x, SPEED * direction, SPEED * 0.075)
@@ -19,7 +19,7 @@ func _physics_process_state(_delta: float) -> String:
 	
 	if name == "Jump":
 		var minimum: float = JUMP_VELOCITY * 0.5
-		if Input.is_action_just_released(&"ui_accept") and player.velocity.y < minimum:
+		if Input.is_action_just_released(&"jump") and player.velocity.y < minimum:
 			player.velocity.y = minimum
 		
 		if player.velocity.y >= 0.0:

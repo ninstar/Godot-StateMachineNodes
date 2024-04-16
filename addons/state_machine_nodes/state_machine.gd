@@ -6,15 +6,15 @@ class_name StateMachine extends Node
 ## A node used to manage and process logic on a [StateNode].
 ## 
 ## [b]StateMachine[/b] can be used to manage and process logic on different
-## StateNodes at time, at least one [StateNode] is needed to use this node.
+## StateNodes at a time, at least one [StateNode] is required for this to work.
 ## [br][br]
 ## Any StateNodes that are direct children of a StateMachine will be
-## automatically assigned to it once it enters the [SceneTree].
+## automatically assigned to it once both nodes enters the [SceneTree].
 ## Each StateNode requires its own unique [code]name[/code].
 
 
 ## Emitted when the state is changed.
-signal state_changed(previous_state: String, new_state: String)
+signal state_changed(previous_state: String, next_state: String)
 
 
 ## If [code]true[/code], automates the processing of StateNodes by calling
