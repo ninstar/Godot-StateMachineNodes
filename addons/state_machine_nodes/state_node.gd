@@ -18,7 +18,7 @@ class_name StateNode extends Node
 ## [method _state_machine_ready].
 
 
-var _state_machine: StateMachine
+var __state_machine: StateMachine
 
 
 ## Emitted when the state is entered.
@@ -84,8 +84,8 @@ func _physics_process_state(delta: float) -> String:
 ## Returns [code]true[/code] if the node is the current state of
 ## a [StateMachine].
 func is_current_state() -> bool:
-	if is_instance_valid(_state_machine):
-		return _state_machine._state_node == self
+	if is_instance_valid(__state_machine):
+		return __state_machine.__state_node == self
 	else:
 		return false
 
@@ -93,19 +93,18 @@ func is_current_state() -> bool:
 ## Returns the [code]name[/code] of the previous [StateNode] if one
 ## exists in the [StateMachine]'s history, otherwise returns [code]""[/code].
 func get_previous_state() -> String:
-	if is_instance_valid(_state_machine):
-		if _state_machine.history.size() > 0:
-			return _state_machine.history[_state_machine.history.size()-1]
+	if is_instance_valid(__state_machine):
+		return __state_machine.get_previous_state()
 	return ""
 
 
 ## Returns the [StateMachine] assigned to this state.
 func get_state_machine() -> StateMachine:
-	return _state_machine
+	return __state_machine
 
 
 ## Returns the [member StateMachine.target_node] of the [StateMachine] assigned to this state.
 func get_target() -> Node:
-	if is_instance_valid(_state_machine):
-		return _state_machine.target_node
+	if is_instance_valid(__state_machine):
+		return __state_machine.target_node
 	return null

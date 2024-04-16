@@ -49,11 +49,11 @@ var state: String = "": set = set_state, get = get_state
 var history: Array[String] = []: set = set_history, get = get_history
 
 
-var _state_table: Dictionary = {}
-var _state_node: StateNode
-var _silent_exit: bool = false
-var _silent_enter: bool = false
-var _silent_signal: bool = false
+var __state_table: Dictionary = {}
+var __state_node: StateNode
+var __silent_exit: bool = false
+var __silent_enter: bool = false
+var __silent_signal: bool = false
 
 
 ## Changes to a different [StateNode] by [code]name[/code]
@@ -74,9 +74,9 @@ var _silent_signal: bool = false
 ## a valid StateNode, otherwise the state will stay the same and
 ## an error will be logged.
 func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
-	_silent_exit = not trans_exit
-	_silent_enter = not trans_enter
-	_silent_signal = not trans_signal
+	__silent_exit = not trans_exit
+	__silent_enter = not trans_enter
+	__silent_signal = not trans_signal
 	set_state(new_state)
 
 
@@ -91,14 +91,14 @@ func get_previous_state() -> String:
 ## Returns a [StateNode] by its [code]name[/code] ([param state_name])
 ## if one exists, otherwise returns [code]null[/code].
 func get_state_node(state_name: String) -> StateNode:
-	if _state_table.has(state_name):
-		return _state_table[state_name] as StateNode
+	if __state_table.has(state_name):
+		return __state_table[state_name] as StateNode
 	return null
 
 
 ## Returns a list with the names of all avaiable StateNodes.
 func get_state_list() -> Array[String]:
-	return _state_table.keys()
+	return __state_table.keys()
 
 
 ## Calls [method StateNode._process_state] on the current [StateNode].
@@ -106,8 +106,8 @@ func get_state_list() -> Array[String]:
 ## [b]Note:[/b] This method is called automatically if [member auto_process]
 ## is [code]true[/code].
 func process_state(delta: float) -> void:
-	if is_instance_valid(_state_node):
-		var new_state: String = _state_node._process_state(delta)
+	if is_instance_valid(__state_node):
+		var new_state: String = __state_node._process_state(delta)
 		if not new_state.is_empty():
 			set_state(new_state)
 
@@ -117,8 +117,8 @@ func process_state(delta: float) -> void:
 ## [b]Note:[/b] This method is called automatically if [member auto_process]
 ## is [code]true[/code].
 func physics_process_state(delta: float) -> void:
-	if is_instance_valid(_state_node):
-		var new_state: String = _state_node._physics_process_state(delta)
+	if is_instance_valid(__state_node):
+		var new_state: String = __state_node._physics_process_state(delta)
 		if not new_state.is_empty():
 			set_state(new_state)
 
@@ -127,13 +127,28 @@ func physics_process_state(delta: float) -> void:
 
 func __on_child_entered_tree(node: Node) -> void:
 	if node.get_parent() == self and node is StateNode:
-		_state_table[node.name] = node
-		node._state_machine = self
+		__state_table[node.name] = node
+		node.__state_machine = self
+		node.renamed.connect(__on_state_node_renamed.bind(node))
+
 
 func __on_child_exiting_tree(node: Node) -> void:
 	if node.get_parent() == self and node is StateNode:
-		if _state_table.has(node.name):
-			_state_table.erase(node.name)
+		if __state_table.has(node.name):
+			__state_table.erase(node.name)
+			node.__state_machine = null
+			if node.renamed.is_connected(__on_state_node_renamed):
+				node.renamed.disconnect(__on_state_node_renamed)
+
+
+func __on_state_node_renamed(node: Node) -> void:
+	# Iterate statle table to find StateNode that matches this node
+	for key: String in __state_table.keys():
+		# Replace entry with new node name
+		if __state_table[key] == node:
+			__state_table.erase(key)
+			__state_table[node.name] = node
+			break
 
 #endregion
 #region Virtual methods
@@ -146,14 +161,14 @@ func _notification(what: int) -> void:
 		NOTIFICATION_READY:
 			set_process(true)
 			set_physics_process(true)
-			for key: String in _state_table.keys():
-				var node := _state_table[key] as StateNode
+			for key: String in __state_table.keys():
+				var node := __state_table[key] as StateNode
 				node._state_machine_ready()
 			if is_instance_valid(initial_state):
 				if initial_state.get_parent() == self:
-					_state_node = initial_state
-					_state_node._enter_state("")
-					_state_node.state_entered.emit()
+					__state_node = initial_state
+					__state_node._enter_state("")
+					__state_node.state_entered.emit()
 		NOTIFICATION_PROCESS:
 			if auto_process:
 				process_state(get_process_delta_time())
@@ -211,12 +226,12 @@ func set_target_node(value: Node) -> void:
 
 func set_state(value: String) -> void:
 	var unmute_transitions = func():
-		_silent_exit = false
-		_silent_enter = false
-		_silent_signal = false
+		__silent_exit = false
+		__silent_enter = false
+		__silent_signal = false
 	
-	var previous_node: StateNode = _state_node
-	var next_node: StateNode = _state_table.get(value, null)
+	var previous_node: StateNode = __state_node
+	var next_node: StateNode = __state_table.get(value, null)
 	
 	if not is_instance_valid(next_node):
 		push_error("StateNode not found found: \"%s\"" % value)
@@ -230,7 +245,7 @@ func set_state(value: String) -> void:
 
 	# Exit current state
 	if is_instance_valid(previous_node):
-		if not _silent_exit:
+		if not __silent_exit:
 			previous_node._exit_state(next_node.name)
 			previous_node.state_exited.emit()
 		
@@ -243,13 +258,13 @@ func set_state(value: String) -> void:
 				history.remove_at(0)
 	
 	# Enter new state
-	if not _silent_enter:
+	if not __silent_enter:
 		next_node._enter_state(previous_node.name)
 		previous_node.state_entered.emit()
 	
-	_state_node = next_node
+	__state_node = next_node
 	
-	if not _silent_signal:
+	if not __silent_signal:
 		state_changed.emit(previous_node.name, next_node.name)
 
 	unmute_transitions.call()
