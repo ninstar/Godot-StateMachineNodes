@@ -80,6 +80,13 @@ func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool 
 	set_state(new_state)
 
 
+## Re-enters the current [member state].
+## Self-transition can be controlled via the optional parameters.
+## (See [method change_state].)
+func reenter_state(trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
+	change_state(state, trans_exit, trans_enter, trans_signal)
+
+
 ## Returns the [code]name[/code] of the previous [StateNode]
 ## if one exists in the history, otherwise returns [code]""[/code].
 func get_previous_state() -> String:
@@ -238,9 +245,6 @@ func set_state(value: String) -> void:
 		unmute_transitions.call()
 		return
 	else:
-		if state == value:
-			unmute_transitions.call()
-			return
 		state = value
 
 	# Exit current state
