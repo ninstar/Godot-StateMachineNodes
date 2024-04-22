@@ -96,7 +96,7 @@ func get_state_node(state_name: String) -> StateNode:
 	return null
 
 
-## Returns a list with the names of all avaiable StateNodes.
+## Returns a list with the names of all available StateNodes.
 func get_state_list() -> Array[String]:
 	return __state_table.keys()
 
@@ -260,7 +260,7 @@ func set_state(value: String) -> void:
 	# Enter new state
 	if not __silent_enter:
 		next_node._enter_state(previous_node.name)
-		previous_node.state_entered.emit()
+		next_node.state_entered.emit()
 	
 	__state_node = next_node
 	
