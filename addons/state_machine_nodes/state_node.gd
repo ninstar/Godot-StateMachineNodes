@@ -88,6 +88,7 @@ func is_current_state() -> bool:
 	if is_instance_valid(__state_machine):
 		return __state_machine.__state_node == self
 	else:
+		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
 		return false
 
 
@@ -96,6 +97,8 @@ func is_current_state() -> bool:
 func get_previous_state() -> String:
 	if is_instance_valid(__state_machine):
 		return __state_machine.get_previous_state()
+	else:
+		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
 	return ""
 
 
@@ -108,4 +111,25 @@ func get_state_machine() -> StateMachine:
 func get_target() -> Node:
 	if is_instance_valid(__state_machine):
 		return __state_machine.target_node
+	else:
+		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
 	return null
+
+
+## Changes to a different [StateNode] by [code]name[/code]
+## ([param new_state]) if a [StateMachine] is valid.
+## (See [method StateMachine.change_state].)
+func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
+	if is_instance_valid(__state_machine):
+		__state_machine.change_state(new_state, trans_exit, trans_enter, trans_signal)
+	else:
+		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
+
+
+## Re-enters the state if the node is the current state of
+## a [StateMachine]. 
+## Self-transition can be controlled via the optional parameters.
+## (See [method StateMachine.change_state].)
+func reenter_state(trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
+	if is_current_state():
+		__state_machine.change_state(name, trans_exit, trans_enter, trans_signal)

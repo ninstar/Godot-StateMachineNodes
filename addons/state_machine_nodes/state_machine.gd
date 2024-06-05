@@ -57,7 +57,7 @@ var __silent_signal: bool = false
 
 
 ## Changes to a different [StateNode] by [code]name[/code]
-## ([param new_state])[br][br]
+## ([param new_state]).[br][br]
 ## The order in which a state transition occurs is as follows:[br]
 ## [br][b]1.[/b] On the current StateNode, [method StateNode._exit_state]
 ## is called and [signal StateNode.state_exited] is emitted.
@@ -71,7 +71,8 @@ var __silent_signal: bool = false
 ## (if [param trans_signal] is [code]true[/code].)
 ## [br][br]
 ## A state transition will only occur if [param new_state] points to
-## a valid StateNode, otherwise the state will stay the same and
+## the [code]name[/code] of a valid StateNode, otherwise the
+## StateMachine will remain on its current state and
 ## an error will be logged.
 func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
 	__silent_exit = not trans_exit
@@ -241,7 +242,7 @@ func set_state(value: String) -> void:
 	var next_node: StateNode = __state_table.get(value, null)
 	
 	if not is_instance_valid(next_node):
-		push_error("StateNode not found found: \"%s\"" % value)
+		push_error("StateNode not found: \"%s\" relative to \"%s\"." % [value, get_path()])
 		unmute_transitions.call()
 		return
 	else:
