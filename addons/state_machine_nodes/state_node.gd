@@ -88,7 +88,7 @@ func is_current_state() -> bool:
 	if is_instance_valid(__state_machine):
 		return __state_machine.__state_node == self
 	else:
-		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
+		push_warning(get_path(), " has no valid StateMachine assigned to it.")
 		return false
 
 
@@ -98,7 +98,7 @@ func get_previous_state() -> String:
 	if is_instance_valid(__state_machine):
 		return __state_machine.get_previous_state()
 	else:
-		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
+		push_warning(get_path(), " has no valid StateMachine assigned to it.")
 	return ""
 
 
@@ -112,7 +112,7 @@ func get_target() -> Node:
 	if is_instance_valid(__state_machine):
 		return __state_machine.target_node
 	else:
-		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
+		push_warning(get_path(), " has no valid StateMachine assigned to it.")
 	return null
 
 
@@ -123,7 +123,7 @@ func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool 
 	if is_instance_valid(__state_machine):
 		__state_machine.change_state(new_state, trans_exit, trans_enter, trans_signal)
 	else:
-		push_warning("No valid StateMachine assigned to StateNode: \"%s\"." % name)
+		push_warning(get_path(), " has no valid StateMachine assigned to it.")
 
 
 ## Re-enters the state if the node is the current state of

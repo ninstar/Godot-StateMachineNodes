@@ -242,7 +242,7 @@ func set_state(value: String) -> void:
 	var next_node: StateNode = __state_table.get(value, null)
 	
 	if not is_instance_valid(next_node):
-		push_error("StateNode not found: \"%s\" relative to \"%s\"." % [value, get_path()])
+		push_error("StateNode \"", value,"\" not found. (", get_path(), ")")
 		unmute_transitions.call()
 		return
 	else:
