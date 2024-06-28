@@ -108,6 +108,12 @@ func get_state_node(state_name: String) -> StateNode:
 func get_state_list() -> Array[String]:
 	return __state_table.keys()
 
+## Calls [method StateNode._unhandled_input_state] on the current [StateNode].
+func unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(__state_node):
+		var new_state: String = __state_node._unhandled_input_state(event)
+		if not new_state.is_empty():
+			set_state(new_state)
 
 ## Calls [method StateNode._process_state] on the current [StateNode].
 ## [br][br]
@@ -183,6 +189,9 @@ func _notification(what: int) -> void:
 		NOTIFICATION_PHYSICS_PROCESS:
 			if auto_process:
 				physics_process_state(get_physics_process_delta_time())
+
+func _unhandled_input(event: InputEvent) -> void:
+	unhandled_input(event)
 
 #endregion
 #region Getters & Setters

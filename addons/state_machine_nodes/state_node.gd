@@ -50,6 +50,12 @@ func _enter_state(previous_state: String) -> void:
 func _exit_state(next_state: String) -> void:
 	pass
 
+## [b]<OVERRIDABLE>[/b][br][br]
+## Called by a [StateMachine] when _unhandled_input is called.
+## [param event] is the [InputEvent] that was received.
+@warning_ignore("unused_parameter")
+func _unhandled_input_state(event: InputEvent) -> String:
+	return ""
 
 ## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] each process frame (idle) with the
