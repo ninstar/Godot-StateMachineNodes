@@ -15,7 +15,8 @@ class_name StateNode extends Node
 ## The following methods can be overriden to add and extend logic:
 ## [method _process_state], [method _physics_process_state],
 ## [method _enter_state], [method _exit_state],
-## [method _state_machine_ready].
+## [method _state_machine_ready], [method _input_state],
+## [method _unhandled_input_state].
 
 
 var __state_machine: StateMachine
@@ -49,6 +50,13 @@ func _enter_state(previous_state: String) -> void:
 @warning_ignore("unused_parameter")
 func _exit_state(next_state: String) -> void:
 	pass
+
+## [b]<OVERRIDABLE>[/b][br][br]
+## Called by a [StateMachine] when _input is called.
+## [param event] is the [InputEvent] that was received.
+@warning_ignore("unused_parameter")
+func _input_state(event: InputEvent) -> String:
+	return ""
 
 ## [b]<OVERRIDABLE>[/b][br][br]
 ## Called by a [StateMachine] when _unhandled_input is called.
