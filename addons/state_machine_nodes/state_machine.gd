@@ -17,9 +17,13 @@ class_name StateMachine extends Node
 signal state_transitioned(old_state: StringName, new_state: StringName, state_data: Dictionary)
 
 ## The maximum amount of state names the StateMachine will save in its history.
-@export_range(0, 1024, 1, "or_greater", "suffix: state(s)") var history_max_size: int = 1: get = get_history_max_size, set = set_history_max_size
+@export_range(1, 1024, 1, "or_greater", "suffix: state(s)") var history_max_size: int = 1: get = get_history_max_size, set = set_history_max_size
 
 ## The [StateNode] the StateMachine will enter once it is ready.
+## [br][br]
+## [b]Note:[/b] The initial StateNode (as well as other sibling states) must be a direct child of
+## the StateMachine in use. Assigning a node that is outside the StateMachine or nested within
+## other child node will result in unexpected behavior.
 @export var initial_state: StateNode: get = get_initial_state, set = set_initial_state
 
 ## A common [Node] that can be accesed by any assigned [StateNode] via
@@ -231,7 +235,7 @@ func get_history() -> Array[StringName]:
 # Setters
 
 func set_history_max_size(value: int) -> void:
-	history_max_size = value
+	history_max_size = maxi(1, value)
 	if history.size() > history_max_size:
 		history.resize(history_max_size)
 
