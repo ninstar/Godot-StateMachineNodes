@@ -279,11 +279,11 @@ frame_progress = 0.121329
 [node name="Collision" type="CollisionShape2D" parent="Player"]
 shape = SubResource("CapsuleShape2D_sqv6l")
 
-[node name="StateMachine" type="Node" parent="Player" node_paths=PackedStringArray("initial_state", "target_node")]
+[node name="StateMachine" type="Node" parent="Player" node_paths=PackedStringArray("initial_state", "common_node")]
 script = ExtResource("3_u32ge")
 history_limit = 3
 initial_state = NodePath("Idle")
-target_node = NodePath("..")
+common_node = NodePath("..")
 
 [node name="Idle" type="Node" parent="Player/StateMachine"]
 script = ExtResource("4_m7thh")
@@ -350,5 +350,3 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_wldyn")
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 editable = false
-
-[connection signal="state_changed" from="Player/StateMachine" to="Player" method="_on_state_machine_state_changed"]

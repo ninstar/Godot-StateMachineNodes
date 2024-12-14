@@ -3,147 +3,124 @@
 class_name StateNode extends Node
 
 
-## A node that functions as a state for a [StateMachine].
-##
-## StateNodes can be used to encapsulate and organize logic that is
-## processed by a parent StateMachine when needed.
-## [br][br]
-## Any StateNodes that are direct children of a StateMachine will be
-## automatically assigned to it once both nodes enters the [SceneTree].
-## Each StateNode requires its own unique [code]name[/code].
-## [br][br]
-## The following methods can be overriden to add and extend logic:
-## [method _process_state], [method _physics_process_state],
-## [method _enter_state], [method _exit_state],
-## [method _state_machine_ready], [method _input_state],
-## [method _unhandled_input_state].
+signal state_entered(old_state: StringName, params: Dictionary)
+signal state_exited(new_state: StringName, params: Dictionary)
 
 
-var __state_machine: StateMachine
+enum __Process {
+		PROCESS = 0b1 << 0,
+		PHYSICS_PROCESS = 0b1 << 1,
+		INPUT = 0b1 << 2,
+		SHORTCUT_INPUT = 0b1 << 3,
+		UNHANDLADED_INPUT = 0b1 << 4,
+		UNHANDLADED_KEY_INPUT = 0b1 << 5,
+	}
+
+var __state_machine: StateMachine = null
+var __common_node: Node = null
+var __is_current: bool = false
+var __process: int = 0
+
+@export var auto_set_processes: bool = true: get = get_auto_set_processes, set = set_auto_set_processes
 
 
-## Emitted when the state is entered.
-signal state_entered()
-
-## Emitted when the state is exited.
-signal state_exited()
-
-
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] once it is ready
 @warning_ignore("unused_parameter")
 func _state_machine_ready() -> void:
 	pass
 
 
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] when the state is entered.
-## [param previous_state] is the name of the previous [b]StateNode[/b].
 @warning_ignore("unused_parameter")
-func _enter_state(previous_state: String) -> void:
+func _enter_state(old_state: StringName, params: Dictionary) -> void:
 	pass
 
 
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] when the state is exited.
-## [param next_state] is the name of the next [b]StateNode[/b].
 @warning_ignore("unused_parameter")
-func _exit_state(next_state: String) -> void:
+func _exit_state(new_state: StringName, params: Dictionary) -> void:
 	pass
 
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] when _input is called.
-## [param event] is the [InputEvent] that was received.
-@warning_ignore("unused_parameter")
-func _input_state(event: InputEvent) -> String:
-	return ""
 
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] when _unhandled_input is called.
-## [param event] is the [InputEvent] that was received.
-@warning_ignore("unused_parameter")
-func _unhandled_input_state(event: InputEvent) -> String:
-	return ""
-
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] each process frame (idle) with the
-## time since the last process frame as argument. ([param delta], in seconds.)
-## [br][br]
-## Use [param return] to specify the [code]name[/code] of the
-## [b]StateNode[/b] to transition to (specifying the name of the current state
-## will re-enter it), or an empty string ([code]""[/code])
-## to stay in the current state for the next process frame. Example:
-## [codeblock]
-## func _process_state(delta):
-##     # Go to "Jump" state if Up is pressed and skip the rest of this code.
-##     if Input.is_action_pressed("ui_up"):
-##         return "Jump"
-##
-##     # Stay in this state.
-##     return ""
-## [/codeblock]
-@warning_ignore("unused_parameter")
-func _process_state(delta: float) -> String:
-	return ""
-
-
-## [b]<OVERRIDABLE>[/b][br][br]
-## Called by a [StateMachine] each physics frame with the time since
-## the last physics frame as argument. ([param delta], in seconds.)
-## See [method _process_state].
-@warning_ignore("unused_parameter")
-func _physics_process_state(delta: float) -> String:
-	return ""
-
-
-## Returns [code]true[/code] if the node is the current state of
-## a [StateMachine].
 func is_current_state() -> bool:
-	if is_instance_valid(__state_machine):
-		return __state_machine.__state_node == self
-	else:
-		push_warning(get_path(), " has no valid StateMachine assigned to it.")
-		return false
+	return __is_current
 
 
-## Returns the [code]name[/code] of the previous [StateNode] if one
-## exists in the [StateMachine]'s history, otherwise returns [code]""[/code].
-func get_previous_state() -> String:
+func get_previous_state() -> StringName:
 	if is_instance_valid(__state_machine):
 		return __state_machine.get_previous_state()
 	else:
 		push_warning(get_path(), " has no valid StateMachine assigned to it.")
-	return ""
+		return ""
 
 
-## Returns the [StateMachine] assigned to this state.
 func get_state_machine() -> StateMachine:
 	return __state_machine
 
 
-## Returns the [member StateMachine.target_node] of the [StateMachine] assigned to this state.
-func get_target() -> Node:
-	if is_instance_valid(__state_machine):
-		return __state_machine.target_node
-	else:
-		push_warning(get_path(), " has no valid StateMachine assigned to it.")
-	return null
+func get_common_node() -> Node:
+	return __common_node
 
 
-## Changes to a different [StateNode] by [code]name[/code]
-## ([param new_state]) if a [StateMachine] is valid.
-## (See [method StateMachine.change_state].)
-func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
+func enter_state(new_state: StringName, params: Dictionary = {}, skip_exit: bool = false, skip_enter: bool = false, skip_signal: bool = false) -> void:
 	if is_instance_valid(__state_machine):
-		__state_machine.change_state(new_state, trans_exit, trans_enter, trans_signal)
+		__state_machine.enter_state(new_state, params, skip_exit, skip_enter, skip_signal)
 	else:
 		push_warning(get_path(), " has no valid StateMachine assigned to it.")
 
 
-## Re-enters the state if the node is the current state of
-## a [StateMachine]. 
-## Self-transition can be controlled via the optional parameters.
-## (See [method StateMachine.change_state].)
-func reenter_state(trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
+func reenter_state(params: Dictionary = {}, skip_exit: bool = false, skip_enter: bool = false, skip_signal: bool = false) -> void:
 	if is_current_state():
-		__state_machine.change_state(name, trans_exit, trans_enter, trans_signal)
+		__state_machine.enter_state(name, params, skip_exit, skip_enter, skip_signal)
+
+
+func exit_state(params: Dictionary = {}, skip_exit: bool = false, skip_enter: bool = false, skip_signal: bool = false) -> void:
+	var previou_state: StringName = get_previous_state()
+	if not previou_state.is_empty():
+		enter_state(previou_state, params, skip_exit, skip_enter, skip_signal)
+
+
+func __toggle_processes(enabled: bool) -> void:
+	if (__process & __Process.PROCESS) == __Process.PROCESS:
+		set_process(enabled)
+	if (__process & __Process.PHYSICS_PROCESS) == __Process.PHYSICS_PROCESS:
+		set_physics_process(enabled)
+	if (__process & __Process.INPUT) == __Process.INPUT:
+		set_process_input(enabled)
+	if (__process & __Process.SHORTCUT_INPUT) == __Process.SHORTCUT_INPUT:
+		set_process_shortcut_input(enabled)
+	if (__process & __Process.UNHANDLADED_INPUT) == __Process.UNHANDLADED_INPUT:
+		set_process_unhandled_input(enabled)
+	if (__process & __Process.UNHANDLADED_KEY_INPUT) == __Process.UNHANDLADED_KEY_INPUT:
+		set_process_unhandled_key_input(enabled)
+
+
+#region Virtual Methods
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_READY:
+			if is_processing():
+				__process = __process | __Process.PROCESS
+			if is_physics_processing():
+				__process = __process | __Process.PHYSICS_PROCESS
+			if is_processing_input():
+				__process = __process | __Process.INPUT
+			if is_processing_shortcut_input():
+				__process = __process | __Process.SHORTCUT_INPUT
+			if is_processing_unhandled_input():
+				__process = __process | __Process.UNHANDLADED_INPUT
+			if is_processing_unhandled_key_input():
+				__process = __process | __Process.UNHANDLADED_KEY_INPUT
+
+#endregion
+#region Getters & Setters
+
+# Getters
+
+func get_auto_set_processes() -> bool:
+	return auto_set_processes
+
+# Setters
+
+func set_auto_set_processes(value: bool) -> void:
+	auto_set_processes = value
+
+#endregion

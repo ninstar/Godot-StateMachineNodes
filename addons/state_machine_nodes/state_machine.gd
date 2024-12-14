@@ -3,214 +3,168 @@
 class_name StateMachine extends Node
 
 
-## A node used to manage and process logic on a [StateNode].
-## 
-## [b]StateMachine[/b] can be used to manage and process logic on different
-## StateNodes at a time, at least one [StateNode] is required for this to work.
-## [br][br]
-## Any StateNodes that are direct children of a StateMachine will be
-## automatically assigned to it once both nodes enters the [SceneTree].
-## Each StateNode requires its own unique [code]name[/code].
+enum AutoProcess {
+		NONE = 0b0,
+		PROCESS = 0b1 << 0,
+		PHYSICS_PROCESS = 0b1 << 1,
+		INPUT = 0b1 << 2,
+		SHORTCUT_INPU = 0b1 << 3,
+		UNHANDLADED_INPUT = 0b1 << 4,
+		UNHANDLADED_KEY_INPUT = 0b1 << 5,
+		ALL = 0b111111,
+	}
 
 
-## Emitted when the state is changed.
-signal state_changed(previous_state: String, next_state: String)
+signal state_transitioned(old_state: StringName, new_state: StringName, params: Dictionary)
 
 
-## If [code]true[/code], automates the processing of StateNodes by calling
-## [method process_state] and [method physics_process_state] every frame.
-## [br][br]
-## Setting this property to [code]false[/code] can be useful if you want
-## to manually determine when these methods should be called.
-@export var auto_process: bool = true: get = get_auto_process, set = set_auto_process
-
-## The maximum amount of state names the StateMachine will save in its history.
 @export_range(0, 1024, 1, "or_greater", "suffix: state(s)") var history_limit: int = 1: get = get_history_limit, set = set_history_limit
-
-## The [StateNode] the StateMachine will enter once it is ready.
 @export var initial_state: StateNode: get = get_initial_state, set = set_initial_state
+@export var common_node: Node: set = set_common_node, get = get_common_node
 
-## A target [Node] that can be accesed by any assigned [StateNode] via
-## [method StateNode.get_target].
-@export var target_node: Node: set = set_target_node, get = get_target_node
-
-
-## The [code]name[/code] of the current [StateNode] of the StateMachine.
-## Changing this value directly will trigger a state transition if a valid
-## StateNode of the same name is assigned to this StateMachine, otherwise
-## the value stay the same and an error is logged.
-## [br][br]
-## For more control over state transitions, check [method change_state].
-var state: String = "": set = set_state, get = get_state
-
-
-## A list with names of previous StateNodes.
-## The maximum amount of entries is defined by [member history_limit].
-var history: Array[String] = []: set = set_history, get = get_history
-
+var state: StringName = &"": set = set_state, get = get_state
+var history: Array[StringName] = []: set = set_history, get = get_history
 
 var __state_table: Dictionary = {}
 var __state_node: StateNode
-var __silent_exit: bool = false
-var __silent_enter: bool = false
-var __silent_signal: bool = false
+var __state_set_only: bool = false
 
 
-## Changes to a different [StateNode] by [code]name[/code]
-## ([param new_state]).[br][br]
-## The order in which a state transition occurs is as follows:[br]
-## [br][b]1.[/b] On the current StateNode, [method StateNode._exit_state]
-## is called and [signal StateNode.state_exited] is emitted.
-## (if [param trans_exit] is [code]true[/code].)
-## [br][b]2.[/b] The reference to the curent StateNode
-## is changed to the new one. ([param new_state])
-## [br][b]3.[/b] On the new StateNode, [method StateNode._enter_state]
-## is called and [signal StateNode.state_entered] is emitted.
-## (if [param trans_enter] is [code]true[/code].)
-## [br][b]4.[/b] [signal state_changed] is emitted.
-## (if [param trans_signal] is [code]true[/code].)
-## [br][br]
-## A state transition will only occur if [param new_state] points to
-## the [code]name[/code] of a valid StateNode, otherwise the
-## StateMachine will remain on its current state and
-## an error will be logged.
-func change_state(new_state: String, trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
-	__silent_exit = not trans_exit
-	__silent_enter = not trans_enter
-	__silent_signal = not trans_signal
-	set_state(new_state)
+
+func enter_state(new_state: StringName, params: Dictionary = {}, skip_exit: bool = false, skip_enter: bool = false, skip_signal: bool = false) -> void:
+	var old_node: StateNode = __state_node
+	var new_node: StateNode = __state_table.get(new_state, null)
+
+	if is_instance_valid(new_node):
+		__state_set_only = true
+		state = new_state
+		
+		# Exit current state
+		if is_instance_valid(old_node):
+			if not skip_exit:
+				old_node._exit_state(new_node.name, params)
+				old_node.state_exited.emit(new_node, params)
+			
+			# Add to history
+			history.append(old_node.name)
+			if history.size() > history_limit:
+				history.remove_at(0)
+		
+		old_node.__toggle_processes(false)
+		new_node.__toggle_processes(true)
+		
+		# Enter new state
+		if not skip_enter:
+			new_node._enter_state(old_node.name, params)
+			new_node.state_entered.emit(old_node, params)
+		
+		__state_node = new_node
+		
+		# Signal state transition
+		if not skip_signal:
+			state_transitioned.emit(old_node.name, new_node.name, params)
+	else:
+		push_error("StateNode \"", new_state,"\" not found. (", get_path(), ")")
 
 
-## Re-enters the current [member state].
-## Self-transition can be controlled via the optional parameters.
-## (See [method change_state].)
-func reenter_state(trans_exit: bool = true, trans_enter: bool = true, trans_signal: bool = true) -> void:
-	change_state(state, trans_exit, trans_enter, trans_signal)
+func reenter_state(params: Dictionary = {}, skip_exit: bool = false, skip_enter: bool = false, skip_signal: bool = false) -> void:
+	enter_state(state, params, skip_exit, skip_enter, skip_signal)
 
 
-## Returns the [code]name[/code] of the previous [StateNode]
-## if one exists in the history, otherwise returns [code]""[/code].
-func get_previous_state() -> String:
+func exit_state(params: Dictionary = {}, skip_exit: bool = false, skip_enter: bool = false, skip_signal: bool = false) -> void:
+	var previou_state: StringName = get_previous_state()
+	if not previou_state.is_empty():
+		enter_state(previou_state, params, skip_exit, skip_enter, skip_signal)
+
+
+func get_previous_state() -> StringName:
 	if history.size() > 0:
 		return history[history.size()-1]
-	return ""
+	else:
+		return &""
 
 
-## Returns a [StateNode] by its [code]name[/code] ([param state_name])
-## if one exists, otherwise returns [code]null[/code].
-func get_state_node(state_name: String) -> StateNode:
+func get_state_node(state_name: StringName) -> StateNode:
 	if __state_table.has(state_name):
 		return __state_table[state_name] as StateNode
-	return null
+	else:
+		return null
 
 
-## Returns a list with the names of all available StateNodes.
-func get_state_list() -> Array[String]:
+func get_state_list() -> Array[StringName]:
 	return __state_table.keys()
 
-## Calls [method StateNode._input_state] on the current [StateNode].
-func input(event: InputEvent) -> void:
-	if is_instance_valid(__state_node):
-		var new_state: String = __state_node._input_state(event)
-		if not new_state.is_empty():
-			set_state(new_state)
 
-## Calls [method StateNode._unhandled_input_state] on the current [StateNode].
-func unhandled_input(event: InputEvent) -> void:
-	if is_instance_valid(__state_node):
-		var new_state: String = __state_node._unhandled_input_state(event)
-		if not new_state.is_empty():
-			set_state(new_state)
-
-## Calls [method StateNode._process_state] on the current [StateNode].
-## [br][br]
-## [b]Note:[/b] This method is called automatically if [member auto_process]
-## is [code]true[/code].
-func process_state(delta: float) -> void:
-	if is_instance_valid(__state_node):
-		var new_state: String = __state_node._process_state(delta)
-		if not new_state.is_empty():
-			set_state(new_state)
-
-
-## Calls [method StateNode._physics_process_state] on the current [StateNode].
-## [br][br]
-## [b]Note:[/b] This method is called automatically if [member auto_process]
-## is [code]true[/code].
-func physics_process_state(delta: float) -> void:
-	if is_instance_valid(__state_node):
-		var new_state: String = __state_node._physics_process_state(delta)
-		if not new_state.is_empty():
-			set_state(new_state)
+func fetch_state_nodes() -> void:
+	__state_table.clear()
+	
+	for node: Node in get_children():
+		if node is StateNode:
+			__state_table[node.name] = node
+			
+			node.__state_machine = self
+			node.__common_node = common_node
+			node.__toggle_processes(false)
+			
+			node.renamed.connect(__on_state_node_renamed.bind(node))
+			node.tree_exiting.connect(__on_state_node_tree_exiting.bind(node))
 
 
 #region Signals
 
-func __on_child_entered_tree(node: Node) -> void:
-	if node.get_parent() == self and node is StateNode:
-		__state_table[node.name] = node
-		node.__state_machine = self
-		node.renamed.connect(__on_state_node_renamed.bind(node))
-
-
-func __on_child_exiting_tree(node: Node) -> void:
-	if node.get_parent() == self and node is StateNode:
-		if __state_table.has(node.name):
-			__state_table.erase(node.name)
-			node.__state_machine = null
-			if node.renamed.is_connected(__on_state_node_renamed):
-				node.renamed.disconnect(__on_state_node_renamed)
-
-
-func __on_state_node_renamed(node: Node) -> void:
-	# Iterate statle table to find StateNode that matches this node
-	for key: String in __state_table.keys():
-		# Replace entry with new node name
+func __on_state_node_renamed(node: StateNode) -> void:
+	# Iterate table to find reference that matches the StateNode
+	var old_node_name: StringName = &""
+	for key: StringName in __state_table.keys():
 		if __state_table[key] == node:
-			__state_table.erase(key)
-			__state_table[node.name] = node
+			old_node_name = key
 			break
+	
+	# Replace with new name
+	if not old_node_name.is_empty():
+		__state_table.erase(old_node_name)
+		__state_table[node.name] = node
+		
+		if node.__is_current:
+			__state_set_only = true
+			state = node.name
+
+
+func __on_state_node_tree_exiting(node: StateNode) -> void:
+	node.__state_machine = null
+	node.__common_node = null
+	node.__is_current = false
+	
+	node.renamed.disconnect(__on_state_node_renamed)
+	node.tree_exiting.disconnect(__on_state_node_tree_exiting)
+	
+	__state_table.erase(node.name)
 
 #endregion
 #region Virtual methods
 
 func _notification(what: int) -> void:
 	match what:
-		NOTIFICATION_ENTER_TREE:
-			child_entered_tree.connect(__on_child_entered_tree)
-			child_exiting_tree.connect(__on_child_exiting_tree)
 		NOTIFICATION_READY:
-			set_process(true)
-			set_physics_process(true)
-			for key: String in __state_table.keys():
+			fetch_state_nodes()
+			
+			for key: StringName in __state_table.keys():
 				var node := __state_table[key] as StateNode
 				node._state_machine_ready()
+			
 			if is_instance_valid(initial_state):
 				if initial_state.get_parent() == self:
 					__state_node = initial_state
-					__state_node._enter_state("")
-					__state_node.state_entered.emit()
-		NOTIFICATION_PROCESS:
-			if auto_process:
-				process_state(get_process_delta_time())
-		NOTIFICATION_PHYSICS_PROCESS:
-			if auto_process:
-				physics_process_state(get_physics_process_delta_time())
-
-func _input(event: InputEvent) -> void:
-	input(event)
-
-func _unhandled_input(event: InputEvent) -> void:
-	unhandled_input(event)
+					__state_set_only = true
+					state = initial_state.name
+					initial_state.__toggle_processes(true)
+					initial_state._enter_state(&"", {})
+					initial_state.state_entered.emit(&"", {})
 
 #endregion
 #region Getters & Setters
 
 # Getters
-
-func get_auto_process() -> bool:
-	return auto_process
-
 
 func get_history_limit() -> int:
 	return history_limit
@@ -220,22 +174,18 @@ func get_initial_state() -> StateNode:
 	return initial_state
 
 
-func get_target_node() -> Node:
-	return target_node
+func get_common_node() -> Node:
+	return common_node
 
 
-func get_state() -> String:
+func get_state() -> StringName:
 	return state
 
 
-func get_history() -> Array[String]:
+func get_history() -> Array[StringName]:
 	return history
 
 # Setters
-
-func set_auto_process(value: bool) -> void:
-	auto_process = value
-
 
 func set_history_limit(value: int) -> void:
 	history_limit = value
@@ -247,54 +197,25 @@ func set_initial_state(value: StateNode) -> void:
 	initial_state = value
 
 
-func set_target_node(value: Node) -> void:
-	target_node = value
+func set_common_node(value: Node) -> void:
+	common_node = value
+
+	# Iterate state table
+	for key: StringName in __state_table.keys():
+		var node: StateNode = __state_table[key]
+		if is_instance_valid(node):
+			node.__common_node = common_node
 
 
-func set_state(value: String) -> void:
-	var unmute_transitions = func():
-		__silent_exit = false
-		__silent_enter = false
-		__silent_signal = false
-	
-	var previous_node: StateNode = __state_node
-	var next_node: StateNode = __state_table.get(value, null)
-	
-	if not is_instance_valid(next_node):
-		push_error("StateNode \"", value,"\" not found. (", get_path(), ")")
-		unmute_transitions.call()
-		return
-	else:
+func set_state(value: StringName) -> void:
+	if __state_set_only:
 		state = value
-
-	# Exit current state
-	if is_instance_valid(previous_node):
-		if not __silent_exit:
-			previous_node._exit_state(next_node.name)
-			previous_node.state_exited.emit()
-		
-		# Add to history
-		if history_limit == 1 and history.size() > 0:
-			history[0] = previous_node.name
-		elif history_limit >= 1:
-			history.append(previous_node.name)
-			if history.size() > history_limit:
-				history.remove_at(0)
-	
-	# Enter new state
-	if not __silent_enter:
-		next_node._enter_state(previous_node.name)
-		next_node.state_entered.emit()
-	
-	__state_node = next_node
-	
-	if not __silent_signal:
-		state_changed.emit(previous_node.name, next_node.name)
-
-	unmute_transitions.call()
+		__state_set_only = false
+	else:
+		enter_state(value)
 
 
-func set_history(value: Array[String]) -> void:
+func set_history(value: Array[StringName]) -> void:
 	history = value
 
 #endregion

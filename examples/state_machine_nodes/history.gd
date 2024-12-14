@@ -9,12 +9,12 @@ extends VBoxContainer
 
 func _ready() -> void:
 	if is_instance_valid(state_machine):
-		state_machine.state_changed.connect(update_history.unbind(2))
+		state_machine.state_transitioned.connect(update_history.unbind(3))
 		update_history()
 
 
 func update_history() -> void:
-	var reversed_history: Array[String] = state_machine.history.duplicate()
+	var reversed_history: Array[StringName] = state_machine.history.duplicate()
 	reversed_history.reverse()
 	
 	list.text = "\n".join(reversed_history)

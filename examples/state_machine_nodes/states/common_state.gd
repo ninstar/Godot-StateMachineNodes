@@ -9,5 +9,5 @@ var sprite: AnimatedSprite2D
 
 
 func _state_machine_ready() -> void:
-	player = get_target()
+	player = get_common_node()
 	sprite = player.get_node(^"Sprite")

@@ -1,25 +1,24 @@
 extends "common_state.gd"
 
 
-func _enter_state(_previous_state: String) -> void:
+func _enter_state(_old_state: StringName, _params: Dictionary) -> void:
 	sprite.play(&"idle")
 
 
-func _physics_process_state(_delta: float) -> String:
+func _physics_process(_delta: float) -> void:
 	if player.is_on_floor():
 		if Input.get_axis(&"walk_left", &"walk_right") != 0.0:
-			return "Walk"
+			return enter_state(&"Walk")
 	else:
-		return "Fall"
-
-	return ""
+		return enter_state(&"Fall")
 
 
-func _unhandled_input_state(event: InputEvent) -> String:
+func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"jump"):
-		get_viewport().set_input_as_handled()
-		return "Jump"
+		return enter_state(&"Jump")
 	if event.is_action_pressed(&"crouch"):
-		get_viewport().set_input_as_handled()
-		return "Crouch"
-	return ""
+		return enter_state(&"Crouch")
+
+
+func _shortcut_input(event: InputEvent) -> void:
+	pass
