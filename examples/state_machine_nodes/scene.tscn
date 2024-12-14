@@ -281,7 +281,7 @@ shape = SubResource("CapsuleShape2D_sqv6l")
 
 [node name="StateMachine" type="Node" parent="Player" node_paths=PackedStringArray("initial_state", "common_node")]
 script = ExtResource("3_u32ge")
-history_limit = 3
+history_max_size = 3
 initial_state = NodePath("Idle")
 common_node = NodePath("..")
 

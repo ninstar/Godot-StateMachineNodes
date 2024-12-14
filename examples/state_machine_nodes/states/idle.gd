@@ -18,7 +18,3 @@ func _unhandled_input(event: InputEvent) -> void:
 		return enter_state(&"Jump")
 	if event.is_action_pressed(&"crouch"):
 		return enter_state(&"Crouch")
-
-
-func _shortcut_input(event: InputEvent) -> void:
-	pass

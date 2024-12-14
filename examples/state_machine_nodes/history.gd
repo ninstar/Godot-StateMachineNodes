@@ -18,4 +18,4 @@ func update_history() -> void:
 	reversed_history.reverse()
 	
 	list.text = "\n".join(reversed_history)
-	count.text = "History %s/%s" % [state_machine.get_history().size(), state_machine.history_limit]
+	count.text = "History %s/%s" % [state_machine.get_history().size(), state_machine.history_max_size]
