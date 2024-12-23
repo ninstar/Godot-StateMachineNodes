@@ -147,6 +147,9 @@ func exit_state(state_data: Dictionary = {}, exit_transition: bool = true, enter
 
 
 func __toggle_processes(enabled: bool) -> void:
+	if not auto_set_processes:
+		return
+	
 	if (__process & __Process.PROCESS) == __Process.PROCESS:
 		set_process(enabled)
 	if (__process & __Process.PHYSICS_PROCESS) == __Process.PHYSICS_PROCESS:
@@ -166,6 +169,7 @@ func __toggle_processes(enabled: bool) -> void:
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_READY:
+			# Determine what processes have been overridden
 			if is_processing():
 				__process = __process | __Process.PROCESS
 			if is_physics_processing():
