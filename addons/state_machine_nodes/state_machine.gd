@@ -128,7 +128,7 @@ func exit_state(state_data: Dictionary = {}, exit_transition: bool = true, enter
 
 
 ## Returns the [code]name[/code] of the previous [StateNode]
-## if one exists in the [member history], otherwise returns [code]""[/code].
+## if one exists in the [member history], otherwise returns [code]&""[/code].
 func get_previous_state() -> StringName:
 	if history.size() > 0:
 		return history[history.size()-1]

@@ -85,7 +85,7 @@ func is_current_state() -> bool:
 
 
 ## Returns the [code]name[/code] of the previous [StateNode] if one
-## exists in the [member StateMachine.history], otherwise returns [code]""[/code].
+## exists in the [member StateMachine.history], otherwise returns [code]&""[/code].
 func get_previous_state() -> StringName:
 	if is_instance_valid(__state_machine):
 		return __state_machine.get_previous_state()
