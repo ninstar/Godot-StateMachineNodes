@@ -195,5 +195,7 @@ func get_auto_set_processes() -> bool:
 
 func set_auto_set_processes(value: bool) -> void:
 	auto_set_processes = value
+	if is_node_ready() and auto_set_processes:
+		__toggle_processes(is_current_state())
 
 #endregion
