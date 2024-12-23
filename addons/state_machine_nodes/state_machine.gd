@@ -107,7 +107,7 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 		if signal_transition:
 			state_transitioned.emit(old_node.name, new_node.name, state_data)
 	else:
-		push_error("StateNode \"", new_state,"\" not found. (", get_path(), ")")
+		push_error("StateNode '", new_state, "' not found. (", get_path(), ")")
 
 
 ## Re-enters the current [member state].
@@ -120,9 +120,11 @@ func reenter_state(state_data: Dictionary = {}, exit_transition: bool = true, en
 ## Enters the previous state if one exists in the [member history].
 ## (See [method enter_state].)
 func exit_state(state_data: Dictionary = {}, exit_transition: bool = true, enter_transition: bool = true, signal_transition: bool = true) -> void:
-	var previou_state: StringName = get_previous_state()
-	if not previou_state.is_empty():
-		enter_state(previou_state, state_data, exit_transition, enter_transition, signal_transition)
+	var previous_state: StringName = get_previous_state()
+	if not previous_state.is_empty():
+		enter_state(previous_state, state_data, exit_transition, enter_transition, signal_transition)
+	else:
+		push_warning("'", previous_state, "' exit state not found. (",  get_path(), ")")
 
 
 ## Returns the [code]name[/code] of the previous [StateNode]

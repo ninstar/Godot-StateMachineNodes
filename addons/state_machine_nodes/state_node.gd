@@ -90,8 +90,8 @@ func get_previous_state() -> StringName:
 	if is_instance_valid(__state_machine):
 		return __state_machine.get_previous_state()
 	else:
-		push_warning(get_path(), " has no valid StateMachine assigned to it.")
-		return ""
+		push_warning("'", name, "' has no valid StateMachine assigned to it. (", get_path(), ")")
+		return &""
 
 
 ## Returns the [StateMachine] assigned to this state.
@@ -109,25 +109,41 @@ func get_common_node() -> Node:
 ## (See [method StateMachine.enter_state].)
 func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transition: bool = true, enter_transition: bool = true, signal_transition: bool = true) -> void:
 	if is_instance_valid(__state_machine):
-		__state_machine.enter_state(new_state, state_data, exit_transition, enter_transition, signal_transition)
+		if is_current_state():
+			__state_machine.enter_state(new_state, state_data, exit_transition, enter_transition, signal_transition)
+		else:
+			push_warning("'", name, "' is not set as the current state of a StateMachine. (", get_path(), ")")
 	else:
-		push_warning(get_path(), " has no valid StateMachine assigned to it.")
+		push_warning("'", name, "' has no valid StateMachine assigned to it. (", get_path(), ")")
 
 
 ## Re-enters the state if the node is the current one. 
 ## Self-transition can be controlled via the optional parameters.
 ## (See [method StateMachine.enter_state].)
 func reenter_state(state_data: Dictionary = {}, exit_transition: bool = true, enter_transition: bool = true, signal_transition: bool = true) -> void:
-	if is_current_state():
-		__state_machine.enter_state(name, state_data, exit_transition, enter_transition, signal_transition)
+	if is_instance_valid(__state_machine):
+		if is_current_state():
+			__state_machine.enter_state(name, state_data, exit_transition, enter_transition, signal_transition)
+		else:
+			push_warning("'", name, "' is not set as the current state of a StateMachine. (", get_path(), ")")
+	else:
+		push_warning("'", name, "' has no valid StateMachine assigned to it. (", get_path(), ")")
 
 
 ## Enters the previous state if one exists in the [member StateMachine.history].
 ## (See [method StateMachine.enter_state].)
 func exit_state(state_data: Dictionary = {}, exit_transition: bool = true, enter_transition: bool = true, signal_transition: bool = true) -> void:
-	var previou_state: StringName = get_previous_state()
-	if not previou_state.is_empty():
-		enter_state(previou_state, state_data, exit_transition, enter_transition, signal_transition)
+	if is_instance_valid(__state_machine):
+		if is_current_state():
+			var previous_state: StringName = get_previous_state()
+			if not previous_state.is_empty():
+				enter_state(previous_state, state_data, exit_transition, enter_transition, signal_transition)
+			else:
+				push_warning("'", previous_state, "' exit state not found. (",  get_path(), ")")
+		else:
+			push_warning("'", name, "' is not set as the current state of a StateMachine. (", get_path(), ")")
+	else:
+		push_warning("'", name, "' has no valid StateMachine assigned to it. (", get_path(), ")")
 
 
 func __toggle_processes(enabled: bool) -> void:
