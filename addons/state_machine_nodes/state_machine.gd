@@ -53,18 +53,24 @@ var __state_set_only: bool = false
 ## ([param new_state]), [param state_data] can be used to transfer
 ## information as [Dictionary] between states.
 ## [br][br]
-## The order in which a state transition occurs is as follows:[br]
-## [br][b]1.[/b] On the current StateNode, [method StateNode._exit_state]
-## is called and [signal StateNode.state_exited] is emitted.
-## (if [param exit_transition] is [code]true[/code].)
-## [br][b]2.[/b] The reference to the curent StateNode
-## is changed to the new one. ([param new_state])
-## [br][b]3.[/b] On the new StateNode, [method StateNode._enter_state]
-## is called and [signal StateNode.state_entered] is emitted.
-## (if [param enter_transition] is [code]true[/code].)
-## [br][b]4.[/b] [signal state_changed] is emitted.
-## (if [param signal_transition] is [code]true[/code].)
+## The order in which a state transition occurs is as follows:
 ## [br][br]
+## [b]I. Old (Current) StateNode[/b][br]
+## [b]1.[/b] Processes are disabled (if [member StateNode.auto_set_processes]
+## is [code]true[/code])[br]
+## [b]2.[/b] [method StateNode._exit_state] is called and [signal StateNode.state_exited]
+## is emitted (if [param exit_transition] is [code]true[/code])[br]
+## [br]
+## [b]II. New (Target) StateNode[/b][br]
+## [b]1.[/b] [method StateNode._enter_state] is called and [signal StateNode.state_entered]
+## is emitted (if [param enter_transition] is [code]true[/code])[br]
+## [b]2.[/b] Processes are enabled (if [member StateNode.auto_set_processes]
+## is [code]true[/code])[br]
+## [br]
+## [b]III. StateMachine[/b][br]
+## [b]1.[/b] [signal state_transitioned] is emitted (if [param signal_transition]
+## is [code]true[/code])[br]
+## [br]
 ## A state transition will only occur if [param new_state] points to
 ## the [code]name[/code] of a valid StateNode, otherwise the
 ## StateMachine will remain on its current state and
@@ -79,11 +85,14 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 		
 		new_node.__is_current = true
 		
-		# Exit current state
 		if is_instance_valid(old_node):
 			if new_node != old_node:
 				old_node.__is_current = false
 			
+			# Disable processes
+			old_node.__toggle_processes(false)
+			
+			# Exit current state
 			if exit_transition:
 				old_node._exit_state(new_node.name, state_data)
 				old_node.state_exited.emit(new_node, state_data)
@@ -93,14 +102,13 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 			if history.size() > history_max_size:
 				history.remove_at(0)
 		
-		# Toggle processes
-		old_node.__toggle_processes(false)
-		new_node.__toggle_processes(true)
-		
 		# Enter new state
 		if enter_transition:
 			new_node._enter_state(old_node.name, state_data)
 			new_node.state_entered.emit(old_node, state_data)
+		
+		# Enable processes
+		new_node.__toggle_processes(true)
 		
 		__state_node = new_node
 		
