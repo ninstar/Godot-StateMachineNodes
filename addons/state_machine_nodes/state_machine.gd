@@ -81,7 +81,8 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 		
 		# Exit current state
 		if is_instance_valid(old_node):
-			old_node.__is_current = false
+			if new_node != old_node:
+				old_node.__is_current = false
 			
 			if exit_transition:
 				old_node._exit_state(new_node.name, state_data)
