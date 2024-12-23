@@ -77,8 +77,12 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 		__state_set_only = true
 		state = new_state
 		
+		new_node.__is_current = true
+		
 		# Exit current state
 		if is_instance_valid(old_node):
+			old_node.__is_current = false
+			
 			if exit_transition:
 				old_node._exit_state(new_node.name, state_data)
 				old_node.state_exited.emit(new_node, state_data)
@@ -204,6 +208,7 @@ func _notification(what: int) -> void:
 					__state_node = initial_state
 					__state_set_only = true
 					state = initial_state.name
+					initial_state.__is_current = true
 					initial_state.__toggle_processes(true)
 					initial_state._enter_state(&"", {})
 					initial_state.state_entered.emit(&"", {})
