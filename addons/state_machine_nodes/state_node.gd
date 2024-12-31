@@ -20,7 +20,7 @@ signal state_entered(old_state: StringName, state_data: Dictionary)
 signal state_exited(new_state: StringName, state_data: Dictionary)
 
 
-enum __Process {
+enum __ProcessFlags {
 		PROCESS = 0b1 << 0,
 		PHYSICS_PROCESS = 0b1 << 1,
 		INPUT = 0b1 << 2,
@@ -30,31 +30,10 @@ enum __Process {
 	}
 
 
-## If [code]true[/code], the [StateMachine] will ensure that only the current StateNode
-## has its process virtual methods enabled after it is entered ([method _process], 
-## [method _phsysics_process], [method _input], [method _shortcut_input], 
-## [method _unhandled_input] and [method _unhandled_key_inpu]).
-## [br][br]
-## Setting this property to [code]false[/code] will cause all StateNodes to be processed
-## at the same time, [method is_current_state] should be used when needed.
-## Example:
-## [codeblock]
-## func _ready()
-##     auto_set_processes = false
-##
-## func _process(delta):
-##     if not is_current_state():
-##         return
-##     
-##     # <Rest of the state code>
-## [/codeblock]
-@export var auto_set_processes: bool = true: get = get_auto_set_processes, set = set_auto_set_processes
-
-
 var __state_machine: StateMachine = null
 var __common_node: Node = null
 var __is_current: bool = false
-var __process: int = 0
+var __process_flags: int = 0
 
 
 ## [b]<OVERRIDABLE>[/b][br][br]
@@ -146,22 +125,21 @@ func exit_state(state_data: Dictionary = {}, exit_transition: bool = true, enter
 		push_warning("'", name, "' has no valid StateMachine assigned to it. (", get_path(), ")")
 
 
-func __toggle_processes(enabled: bool) -> void:
-	if not auto_set_processes:
-		return
+func __toggle_processes(enabled: bool, auto_set:  bool) -> void:
+	var __is_enabled: bool = enabled and auto_set
 	
-	if (__process & __Process.PROCESS) == __Process.PROCESS:
-		set_process(enabled)
-	if (__process & __Process.PHYSICS_PROCESS) == __Process.PHYSICS_PROCESS:
-		set_physics_process(enabled)
-	if (__process & __Process.INPUT) == __Process.INPUT:
-		set_process_input(enabled)
-	if (__process & __Process.SHORTCUT_INPUT) == __Process.SHORTCUT_INPUT:
-		set_process_shortcut_input(enabled)
-	if (__process & __Process.UNHANDLADED_INPUT) == __Process.UNHANDLADED_INPUT:
-		set_process_unhandled_input(enabled)
-	if (__process & __Process.UNHANDLADED_KEY_INPUT) == __Process.UNHANDLADED_KEY_INPUT:
-		set_process_unhandled_key_input(enabled)
+	if (__process_flags & __ProcessFlags.PROCESS) == __ProcessFlags.PROCESS:
+		set_process(__is_enabled)
+	if (__process_flags & __ProcessFlags.PHYSICS_PROCESS) == __ProcessFlags.PHYSICS_PROCESS:
+		set_physics_process(__is_enabled)
+	if (__process_flags & __ProcessFlags.INPUT) == __ProcessFlags.INPUT:
+		set_process_input(__is_enabled)
+	if (__process_flags & __ProcessFlags.SHORTCUT_INPUT) == __ProcessFlags.SHORTCUT_INPUT:
+		set_process_shortcut_input(__is_enabled)
+	if (__process_flags & __ProcessFlags.UNHANDLADED_INPUT) == __ProcessFlags.UNHANDLADED_INPUT:
+		set_process_unhandled_input(__is_enabled)
+	if (__process_flags & __ProcessFlags.UNHANDLADED_KEY_INPUT) == __ProcessFlags.UNHANDLADED_KEY_INPUT:
+		set_process_unhandled_key_input(__is_enabled)
 
 
 #region Virtual Methods
@@ -171,31 +149,16 @@ func _notification(what: int) -> void:
 		NOTIFICATION_READY:
 			# Determine what processes have been overridden
 			if is_processing():
-				__process = __process | __Process.PROCESS
+				__process_flags = __process_flags | __ProcessFlags.PROCESS
 			if is_physics_processing():
-				__process = __process | __Process.PHYSICS_PROCESS
+				__process_flags = __process_flags | __ProcessFlags.PHYSICS_PROCESS
 			if is_processing_input():
-				__process = __process | __Process.INPUT
+				__process_flags = __process_flags | __ProcessFlags.INPUT
 			if is_processing_shortcut_input():
-				__process = __process | __Process.SHORTCUT_INPUT
+				__process_flags = __process_flags | __ProcessFlags.SHORTCUT_INPUT
 			if is_processing_unhandled_input():
-				__process = __process | __Process.UNHANDLADED_INPUT
+				__process_flags = __process_flags | __ProcessFlags.UNHANDLADED_INPUT
 			if is_processing_unhandled_key_input():
-				__process = __process | __Process.UNHANDLADED_KEY_INPUT
-
-#endregion
-#region Getters & Setters
-
-# Getters
-
-func get_auto_set_processes() -> bool:
-	return auto_set_processes
-
-# Setters
-
-func set_auto_set_processes(value: bool) -> void:
-	auto_set_processes = value
-	if is_node_ready() and auto_set_processes:
-		__toggle_processes(is_current_state())
+				__process_flags = __process_flags | __ProcessFlags.UNHANDLADED_KEY_INPUT
 
 #endregion

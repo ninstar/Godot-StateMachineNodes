@@ -3,26 +3,32 @@ extends CharacterBody2D
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
+@onready var state_label: Label = $State
 @onready var state_machine: StateMachine = $StateMachine
 
 
 func _ready() -> void:
 	load_input_map()
-	$State.text = state_machine.initial_state.name
+	state_label.text = state_machine.state
 
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += gravity * 2.0 * delta
 	
-	# Uncomment the line below if you've set the 'StateMachine.auto_process' to 'false'!
-	# state_machine.physics_process_state(delta)
+	# The following line will only be processed if 'StateMachine.auto_process' is set to 'false'.
+	state_machine.call_physics_process(delta)
 	
 	move_and_slide()
 
 
-func _on_state_machine_state_changed(_previous_state: String, new_state: String) -> void:
-	$State.text = new_state
+func _unhandled_input(event: InputEvent) -> void:
+	# The following line will only be processed if 'StateMachine.auto_process' is set to 'false'.
+	state_machine.call_unhandled_input(event)
+
+
+func _on_state_machine_state_transitioned(_old_state: StringName, new_state: StringName, _state_data: Dictionary) -> void:
+	state_label.text = new_state
 
 
 func load_input_map() -> void:

@@ -350,3 +350,5 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_wldyn")
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 editable = false
+
+[connection signal="state_transitioned" from="Player/StateMachine" to="Player" method="_on_state_machine_state_transitioned"]

@@ -13,8 +13,41 @@ class_name StateMachine extends Node
 ## Each StateNode requires its own unique [code]name[/code].
 
 
-## Emitted during the transition between states
+## Emitted during the transition between two states.
 signal state_transitioned(old_state: StringName, new_state: StringName, state_data: Dictionary)
+
+
+## If [code]true[/code], the StateMachine ensures that only the current [StateNode]
+## has its processes enabled ([method Node._process], 
+## [method Node._physics_process], [method Node._input], [method Node._shortcut_input], 
+## [method Node._unhandled_input] and [method Node._unhandled_key_input]).
+## [br][br]
+## Setting this property to [code]false[/code] disables the processes
+## of all StateNodes, including the current one. This can be useful if you want
+## to determine the exact point where these methods should be called in your code by using the
+## [code]call_*[/code] methods ([method call_process], [method call_physics_process],
+## [method call_input], [method call_shortcut_input], [method call_unhandled_input]
+## and [method call_unhandled_key_input]).
+## Example:
+## [codeblock]
+## extends CharacterBody2D
+## 
+## @onready var state_machine = $StateMachine
+##
+## func _ready()
+##     state_machine.auto_process = false
+##
+## func _physics_process(delta):
+##     # Add gravity
+##     if not is_on_floor():
+##         velocity += get_gravity() * delta
+##     
+##     # Handle movement states
+##     state_machine.call_physics_process(delta)
+##
+##     move_and_slide()
+## [/codeblock]
+@export var auto_process: bool = true: get = get_auto_process, set = set_auto_process
 
 ## The maximum amount of state names the StateMachine will save in its history.
 @export_range(1, 1024, 1, "or_greater", "suffix: state(s)") var history_max_size: int = 1: get = get_history_max_size, set = set_history_max_size
@@ -51,12 +84,12 @@ var __state_set_only: bool = false
 
 ## Changes to a different [StateNode] by [code]name[/code]
 ## ([param new_state]), [param state_data] can be used to transfer
-## information as [Dictionary] between states.
+## information as a [Dictionary] across states.
 ## [br][br]
 ## The order in which a state transition occurs is as follows:
 ## [br][br]
 ## [b]I. Old (Current) StateNode[/b][br]
-## [b]1.[/b] Processes are disabled (if [member StateNode.auto_set_processes]
+## [b]1.[/b] Processes are disabled (if [member auto_process]
 ## is [code]true[/code])[br]
 ## [b]2.[/b] [method StateNode._exit_state] is called and [signal StateNode.state_exited]
 ## is emitted (if [param exit_transition] is [code]true[/code])[br]
@@ -64,7 +97,7 @@ var __state_set_only: bool = false
 ## [b]II. New (Target) StateNode[/b][br]
 ## [b]1.[/b] [method StateNode._enter_state] is called and [signal StateNode.state_entered]
 ## is emitted (if [param enter_transition] is [code]true[/code])[br]
-## [b]2.[/b] Processes are enabled (if [member StateNode.auto_set_processes]
+## [b]2.[/b] Processes are enabled (if [member auto_process]
 ## is [code]true[/code])[br]
 ## [br]
 ## [b]III. StateMachine[/b][br]
@@ -90,7 +123,7 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 				old_node.__is_current = false
 			
 			# Disable processes
-			old_node.__toggle_processes(false)
+			old_node.__toggle_processes(false, auto_process)
 			
 			# Exit current state
 			if exit_transition:
@@ -108,7 +141,7 @@ func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transi
 			new_node.state_entered.emit(old_node, state_data)
 		
 		# Enable processes
-		new_node.__toggle_processes(true)
+		new_node.__toggle_processes(true, auto_process)
 		
 		__state_node = new_node
 		
@@ -159,6 +192,80 @@ func get_state_list() -> Array[StringName]:
 	return __state_table.keys()
 
 
+#region Manual call_* methods
+
+## Calls [method Node._process] on the current [StateNode].[br][br]
+## [b]Note:[/b] This is done automatically if [member auto_process]
+## is [code]true[/code].
+func call_process(delta: float) -> void:
+	if(
+			is_instance_valid(__state_node)
+			and not auto_process
+			and (__state_node.__process_flags & __state_node.__ProcessFlags.PROCESS) == __state_node.__ProcessFlags.PROCESS
+	):
+		__state_node._process(delta)
+
+
+## Calls [method Node._physics_process] on the current [StateNode].[br][br]
+## [b]Note:[/b] This is done automatically if [member auto_process]
+## is [code]true[/code].
+func call_physics_process(delta: float) -> void:
+	if(
+			is_instance_valid(__state_node)
+			and not auto_process
+			and (__state_node.__process_flags & __state_node.__ProcessFlags.PHYSICS_PROCESS) == __state_node.__ProcessFlags.PHYSICS_PROCESS
+	):
+		__state_node._physics_process(delta)
+
+
+## Calls [method Node._input] on the current [StateNode].[br][br]
+## [b]Note:[/b] This is done automatically if [member auto_process]
+## is [code]true[/code].
+func call_input(event: InputEvent) -> void:
+	if(
+			is_instance_valid(__state_node)
+			and not auto_process
+			and (__state_node.__process_flags & __state_node.__ProcessFlags.INPUT) == __state_node.__ProcessFlags.INPUT
+	):
+		__state_node._input(event)
+
+
+## Calls [method Node._shortcut_input] on the current [StateNode].[br][br]
+## [b]Note:[/b] This is done automatically if [member auto_process]
+## is [code]true[/code].
+func call_shortcut_input(event: InputEvent) -> void:
+	if(
+			is_instance_valid(__state_node)
+			and not auto_process
+			and (__state_node.__process_flags & __state_node.__ProcessFlags.SHORTCUT_INPUT) == __state_node.__ProcessFlags.SHORTCUT_INPUT
+	):
+		__state_node._shortcut_input(event)
+
+
+## Calls [method Node._unhandled_input] on the current [StateNode].[br][br]
+## [b]Note:[/b] This is done automatically if [member auto_process]
+## is [code]true[/code].
+func call_unhandled_input(event: InputEvent) -> void:
+	if(
+			is_instance_valid(__state_node)
+			and not auto_process
+			and (__state_node.__process_flags & __state_node.__ProcessFlags.UNHANDLADED_INPUT) == __state_node.__ProcessFlags.UNHANDLADED_INPUT
+	):
+		__state_node._unhandled_input(event)
+
+
+## Calls [method Node._unhandled_key_input] on the current [StateNode].[br][br]
+## [b]Note:[/b] This is done automatically if [member auto_process]
+## is [code]true[/code].
+func call_unhandled_key_input(event: InputEvent) -> void:
+	if(
+			is_instance_valid(__state_node)
+			and not auto_process
+			and (__state_node.__process_flags & __state_node.__ProcessFlags.UNHANDLADED_KEY_INPUT) == __state_node.__ProcessFlags.UNHANDLADED_KEY_INPUT
+	):
+		__state_node._unhandled_key_input(event)
+
+#endregion
 #region Signals
 
 func __on_state_node_renamed(node: StateNode) -> void:
@@ -184,7 +291,7 @@ func __on_child_entered_tree(node: Node) -> void:
 		__state_table[node.name] = node
 		node.__state_machine = self
 		node.__common_node = common_node
-		node.__toggle_processes(false)
+		node.__toggle_processes(false, auto_process)
 		node.renamed.connect(__on_state_node_renamed.bind(node))
 
 
@@ -207,7 +314,7 @@ func _notification(what: int) -> void:
 					__state_table[node.name] = node
 					node.__state_machine = self
 					node.__common_node = common_node
-					node.__toggle_processes(false)
+					node.__toggle_processes(false, auto_process)
 					node.renamed.connect(__on_state_node_renamed.bind(node))
 			
 			for key: StringName in __state_table.keys():
@@ -220,7 +327,7 @@ func _notification(what: int) -> void:
 					__state_set_only = true
 					state = initial_state.name
 					initial_state.__is_current = true
-					initial_state.__toggle_processes(true)
+					initial_state.__toggle_processes(true, auto_process)
 					initial_state._enter_state(&"", {})
 					initial_state.state_entered.emit(&"", {})
 
@@ -228,6 +335,10 @@ func _notification(what: int) -> void:
 #region Getters & Setters
 
 # Getters
+
+func get_auto_process() -> bool:
+	return auto_process
+
 
 func get_history_max_size() -> int:
 	return history_max_size
@@ -249,6 +360,13 @@ func get_history() -> Array[StringName]:
 	return history
 
 # Setters
+
+func set_auto_process(value: bool) -> void:
+	auto_process = value
+	
+	if is_instance_valid(__state_node) and __state_node.is_node_ready():
+		__state_node.__toggle_processes(__state_node.is_current_state(), auto_process)
+
 
 func set_history_max_size(value: int) -> void:
 	history_max_size = maxi(1, value)
