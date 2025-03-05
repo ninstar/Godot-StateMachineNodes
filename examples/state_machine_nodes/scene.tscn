@@ -1,14 +1,14 @@
 [gd_scene load_steps=26 format=3 uid="uid://cch82w633sb1r"]
 
-[ext_resource type="Script" path="res://examples/state_machine_nodes/player.gd" id="1_3h142"]
+[ext_resource type="Script" uid="uid://bs6ff3km5x4ja" path="res://examples/state_machine_nodes/player.gd" id="1_3h142"]
 [ext_resource type="Texture2D" uid="uid://bb8hayf3q488j" path="res://examples/state_machine_nodes/sprite.png" id="2_kqjiq"]
-[ext_resource type="Script" path="res://addons/state_machine_nodes/state_machine.gd" id="3_u32ge"]
-[ext_resource type="Script" path="res://examples/state_machine_nodes/states/idle.gd" id="4_m7thh"]
-[ext_resource type="Script" path="res://examples/state_machine_nodes/states/walk.gd" id="5_rrbdy"]
-[ext_resource type="Script" path="res://examples/state_machine_nodes/states/jump.gd" id="6_ysv5g"]
-[ext_resource type="Script" path="res://examples/state_machine_nodes/states/fall.gd" id="7_v58jh"]
-[ext_resource type="Script" path="res://examples/state_machine_nodes/states/crouch.gd" id="8_ive84"]
-[ext_resource type="Script" path="res://examples/state_machine_nodes/history.gd" id="9_4bj88"]
+[ext_resource type="Script" uid="uid://cyjj3nyqr8e3y" path="res://addons/state_machine_nodes/state_machine.gd" id="3_u32ge"]
+[ext_resource type="Script" uid="uid://drqu5m4exej3o" path="res://examples/state_machine_nodes/states/idle.gd" id="4_m7thh"]
+[ext_resource type="Script" uid="uid://dmp2l265jxf5i" path="res://examples/state_machine_nodes/states/walk.gd" id="5_rrbdy"]
+[ext_resource type="Script" uid="uid://c5kh4e354d312" path="res://examples/state_machine_nodes/states/jump.gd" id="6_ysv5g"]
+[ext_resource type="Script" uid="uid://ci866kovst2mt" path="res://examples/state_machine_nodes/states/fall.gd" id="7_v58jh"]
+[ext_resource type="Script" uid="uid://d3lc0q8o72wlr" path="res://examples/state_machine_nodes/states/crouch.gd" id="8_ive84"]
+[ext_resource type="Script" uid="uid://dynt0cbauuusc" path="res://examples/state_machine_nodes/history.gd" id="9_4bj88"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_omlgw"]
 bg_color = Color(0, 0, 0, 0)
