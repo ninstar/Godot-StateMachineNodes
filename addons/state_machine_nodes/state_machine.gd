@@ -77,7 +77,7 @@ var state: StringName = &"": set = set_state, get = get_state
 var history: Array[StringName] = []: set = set_history, get = get_history
 
 
-var __state_table: Dictionary = {}
+var __state_table: Dictionary[StringName, StateNode] = {}
 var __state_node: StateNode
 var __state_set_only: bool = false
 
@@ -110,7 +110,7 @@ var __state_set_only: bool = false
 ## an error will be logged.
 func enter_state(new_state: StringName, state_data: Dictionary = {}, exit_transition: bool = true, enter_transition: bool = true, signal_transition: bool = true) -> void:
 	var old_node: StateNode = __state_node
-	var new_node: StateNode = __state_table.get(new_state, null)
+	var new_node: StateNode = __state_table[new_state] if __state_table.has(new_state) else null
 
 	if is_instance_valid(new_node):
 		__state_set_only = true
@@ -182,7 +182,7 @@ func get_previous_state() -> StringName:
 ## if one exists, otherwise returns [code]null[/code].
 func get_state_node(state_name: StringName) -> StateNode:
 	if __state_table.has(state_name):
-		return __state_table[state_name] as StateNode
+		return __state_table[state_name]
 	else:
 		return null
 
@@ -271,7 +271,7 @@ func call_unhandled_key_input(event: InputEvent) -> void:
 func __on_state_node_renamed(node: StateNode) -> void:
 	# Iterate table to find reference that matches the StateNode
 	var old_node_name: StringName = &""
-	for key: StringName in __state_table.keys():
+	for key: StringName in __state_table.keys() as Array[StringName]:
 		if __state_table[key] == node:
 			old_node_name = key
 			break
@@ -288,17 +288,17 @@ func __on_state_node_renamed(node: StateNode) -> void:
 
 func __on_child_entered_tree(node: Node) -> void:
 	if node is StateNode and node.get_parent() == self and not __state_table.has(node.name):
-		__state_table[node.name] = node
-		node.__state_machine = self
-		node.__common_node = common_node
-		node.__toggle_processes(false, auto_process)
-		node.renamed.connect(__on_state_node_renamed.bind(node))
+		__state_table[node.name] = node as StateNode
+		__state_table[node.name].__state_machine = self
+		__state_table[node.name].__common_node = common_node
+		__state_table[node.name].__toggle_processes(false, auto_process)
+		__state_table[node.name].renamed.connect(__on_state_node_renamed.bind(__state_table[node.name]))
 
 
 func __on_child_exiting_tree(node: Node) -> void:
 	if node is StateNode and node.is_queued_for_deletion():
 		__state_table.erase(node.name)
-		node.renamed.disconnect(__on_state_node_renamed)
+		__state_table[node.name].renamed.disconnect(__on_state_node_renamed)
 
 #endregion
 #region Virtual methods
@@ -311,14 +311,14 @@ func _notification(what: int) -> void:
 			
 			for node: Node in get_children():
 				if node is StateNode:
-					__state_table[node.name] = node
-					node.__state_machine = self
-					node.__common_node = common_node
-					node.__toggle_processes(false, auto_process)
-					node.renamed.connect(__on_state_node_renamed.bind(node))
+					__state_table[node.name] = node as StateNode
+					__state_table[node.name].__state_machine = self
+					__state_table[node.name].__common_node = common_node
+					__state_table[node.name].__toggle_processes(false, auto_process)
+					__state_table[node.name].renamed.connect(__on_state_node_renamed.bind(__state_table[node.name]))
 			
-			for key: StringName in __state_table.keys():
-				var node := __state_table[key] as StateNode
+			for key: StringName in __state_table.keys() as Array[StringName]:
+				var node: StateNode = __state_table[key]
 				node._state_machine_ready()
 			
 			if is_instance_valid(initial_state):
@@ -382,7 +382,7 @@ func set_common_node(value: Node) -> void:
 	common_node = value
 
 	# Iterate state table
-	for key: StringName in __state_table.keys():
+	for key: StringName in __state_table.keys() as Array[StringName]:
 		var node: StateNode = __state_table[key]
 		if is_instance_valid(node):
 			node.__common_node = common_node
